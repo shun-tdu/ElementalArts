@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10e238e76bc14e008745ef704ed6d9a8, type: 3}
   m_Name: Circle Spawn Pattern
   m_EditorClassIdentifier: 
-  projectileCount: 4
+  projectileCount: 8
   spawnPointOffSet: {x: 0, y: 0, z: 0}
