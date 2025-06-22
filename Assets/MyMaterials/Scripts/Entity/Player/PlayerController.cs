@@ -33,16 +33,9 @@ namespace Player
         [SerializeField] private float defaultAimDistance = 100f;
 
 
-        [Header("Cinemachine Setting")] 
         [SerializeField] private Transform eyeTransform;
-        [SerializeField] private CinemachineVirtualCamera vCamFreeLookLow;
-        [SerializeField] private CinemachineVirtualCamera vCamFreeLookHighLeft;
-        [SerializeField] private CinemachineVirtualCamera vCamFreeLookHighRight;
-        [SerializeField] private float speedThreshold;
-        [SerializeField] private float horizontalSpeedThreshold;
         
-        // [SerializeField] private CinemachineTargetGroup targetGroup;
-
+        
         [Header("Input Control(Lock Axes)")] 
         public AxisState horizontalAim;
         public AxisState verticalAim;
@@ -59,6 +52,7 @@ namespace Player
         //アタッチされているコンポーネントの内部参照
         private PlayerControls controls;
         private WeaponSystem weapon;
+        private CameraManager camManager;
         private Rigidbody rb;
         private Transform cameraPivot;
         private float yaw, pitch;
@@ -76,7 +70,8 @@ namespace Player
             cameraPivot = transform.Find("CameraPivot");
             controls = new PlayerControls();
             weapon = GetComponent<WeaponSystem>();
-
+            camManager = GetComponent<CameraManager>();
+            
             //イベントの購読
             //----Movement----
             controls.Player.Move.performed += ctx => moveRawInput = ctx.ReadValue<Vector2>();
@@ -121,7 +116,8 @@ namespace Player
             // HandleLook();
 
             //カメラステートの更新処理
-            UpdateCameraState();
+            camManager.UpdateCameraState(rb.velocity);
+            // UpdateCameraState();
 
             //カーソル固定処理
             HandleCursorLock();
@@ -273,57 +269,7 @@ namespace Player
         {
             return isAimingSubTarget ? subLockOnTarget : mainLockOnTarget;
         }
-
-
-        /// <summary>
-        /// カメラステートの更新
-        /// </summary>
-        private void UpdateCameraState()
-        {
-            Vector3 localVelocity = transform.InverseTransformDirection(rb.velocity);
-            float localRightSpeed = localVelocity.x;
-            float localForwardSoeed = localVelocity.z;
-            float speed = new Vector2(localRightSpeed, localForwardSoeed).magnitude;
-            
-            //低速時は画面中央に機体を表示
-            if (speed < speedThreshold)
-            {
-                Debug.Log("State:Low");
-                vCamFreeLookLow.Priority = 12;
-                vCamFreeLookHighLeft.Priority = 11;
-                vCamFreeLookHighRight.Priority = 10;
-            }
-            //高速移動時はPlayerの左右速度に応じてカメラを切り替え
-            else
-            {   
-                //右向き移動時のカメラ配置
-                if (localRightSpeed > horizontalSpeedThreshold)
-                {
-                    Debug.Log("State:Right");
-
-                    vCamFreeLookLow.Priority = 11;
-                    vCamFreeLookHighLeft.Priority = 10;
-                    vCamFreeLookHighRight.Priority = 12;
-                }
-                //左向き移動時のカメラ配置
-                else if(localRightSpeed < -horizontalSpeedThreshold)
-                {
-                    Debug.Log("State:Left");
-
-                    vCamFreeLookLow.Priority = 11;
-                    vCamFreeLookHighLeft.Priority = 12;
-                    vCamFreeLookHighRight.Priority = 10;
-                }
-                //正面姑息時のカメラ配置
-                else
-                {
-                    Debug.Log("State:ForwardHigh");
-                    vCamFreeLookLow.Priority = 11;
-                    vCamFreeLookHighLeft.Priority = 12;
-                    vCamFreeLookHighRight.Priority = 10;
-                }
-            }
-        }
+        
 
         // private void ToggleLockOn()
         // {

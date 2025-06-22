@@ -86,14 +86,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2807468504511581305}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.01745245, y: 0, z: 0, w: 0.99984777}
   m_LocalPosition: {x: 0, y: 1.16, z: -0.29}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2632605664917425331}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 2, y: 0, z: 0}
 --- !u!1 &8068633759915028992
 GameObject:
   m_ObjectHideFlags: 0
@@ -121,8 +121,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8068633759915028992}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.4255989, y: 0, z: -9.702395}
+  m_LocalRotation: {x: 0.01745245, y: -0, z: -0, w: 0.99984777}
+  m_LocalPosition: {x: 0, y: 2.561553, z: -8.585885}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -346,12 +346,12 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3441652040888342025}
   serializedVersion: 2
-  m_Mass: 0.1
+  m_Mass: 10
   m_Drag: 0.2
   m_AngularDrag: 0.01
   m_UseGravity: 0
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!135 &5391616135837981574
@@ -379,8 +379,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88e0060125c7cee4180faab34ece5ce9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2
-  thrustAccel: 20
+  moveSpeed: 45
+  thrustAccel: 0.001
+  accelTime: 0.2
+  decelTime: 0.5
   lookSensitivity: 0.1
   lockOnRange: 100
   lockOnAngle: 50
@@ -388,11 +390,47 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2048
   reticleImage: {fileID: 0}
-  reticleNormalColor: {r: 1, g: 1, b: 1, a: 1}
+  reticleNormalColor: {r: 1, g: 0, b: 0, a: 0.25490198}
   reticleMainLockOnColor: {r: 0.00481081, g: 0, b: 1, a: 1}
   reticleSubLockOnColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   defaultAimDistance: 100
-  freeLookCamera: {fileID: 0}
+  eyeTransform: {fileID: 6224366591764314683}
+  horizontalAim:
+    Value: 0
+    m_SpeedMode: 1
+    m_MaxSpeed: 1
+    m_AccelTime: 0.1
+    m_DecelTime: 0.1
+    m_InputAxisName: Mouse X
+    m_InputAxisValue: 0
+    m_InvertInput: 0
+    m_MinValue: -180
+    m_MaxValue: 180
+    m_Wrap: 1
+    m_Recentering:
+      m_enabled: 0
+      m_WaitTime: 0
+      m_RecenteringTime: 0
+      m_LegacyHeadingDefinition: 0
+      m_LegacyVelocityFilterStrength: 0
+  verticalAim:
+    Value: 0
+    m_SpeedMode: 1
+    m_MaxSpeed: 1
+    m_AccelTime: 0.1
+    m_DecelTime: 0.1
+    m_InputAxisName: Mouse Y
+    m_InputAxisValue: 0
+    m_InvertInput: 1
+    m_MinValue: -30
+    m_MaxValue: 30
+    m_Wrap: 0
+    m_Recentering:
+      m_enabled: 0
+      m_WaitTime: 0
+      m_RecenteringTime: 0
+      m_LegacyHeadingDefinition: 0
+      m_LegacyVelocityFilterStrength: 0
 --- !u!114 &1001236469
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -451,3 +489,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 100
+--- !u!114 &5172463605891014650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3441652040888342025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fab11eaf0ca494fa383ad2f9ca4f8da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  eyeTransform: {fileID: 0}
+  vCamFreeLookLow: {fileID: 0}
+  vCamFreeLookHighLeft: {fileID: 0}
+  vCamFreeLookHighRight: {fileID: 0}
+  speedThreshold: 0
+  horizontalSpeedThreshold: 0
+  vCamMainLockOn: {fileID: 0}
+  targetGroup: {fileID: 0}
+  maxLockCameraDistance: 20
