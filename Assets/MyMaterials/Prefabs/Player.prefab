@@ -24,14 +24,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1710610421}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.41, z: 4.9}
+  m_LocalPosition: {x: 0, y: -0.26, z: 4.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 7352447070098369483}
   m_Father: {fileID: 2632605664917425331}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &56722849309732816
+--- !u!1 &2021709045797711143
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -39,29 +40,28 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8935971549394861270}
+  - component: {fileID: 4701350042055313123}
   m_Layer: 9
-  m_Name: CameraPivot
+  m_Name: EmitPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8935971549394861270
+--- !u!4 &4701350042055313123
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 56722849309732816}
+  m_GameObject: {fileID: 2021709045797711143}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.41, z: 4.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 7352447070098369483}
+  m_Children: []
   m_Father: {fileID: 2632605664917425331}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2807468504511581305
 GameObject:
@@ -122,11 +122,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8068633759915028992}
   m_LocalRotation: {x: 0.01745245, y: -0, z: -0, w: 0.99984777}
-  m_LocalPosition: {x: 0, y: 2.561553, z: -8.585885}
+  m_LocalPosition: {x: 5.65, y: 0.6615522, z: -13.125885}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8935971549394861270}
+  m_Father: {fileID: 1710610422}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 6.429, y: 0, z: 0}
 --- !u!20 &6959227722512363293
@@ -384,17 +384,11 @@ MonoBehaviour:
   accelTime: 0.2
   decelTime: 0.5
   lookSensitivity: 0.1
-  lockOnRange: 100
-  lockOnAngle: 50
-  lockOnLayer:
-    serializedVersion: 2
-    m_Bits: 2048
   reticleImage: {fileID: 0}
   reticleNormalColor: {r: 1, g: 0, b: 0, a: 0.25490198}
   reticleMainLockOnColor: {r: 0.00481081, g: 0, b: 1, a: 1}
   reticleSubLockOnColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   defaultAimDistance: 100
-  eyeTransform: {fileID: 6224366591764314683}
   horizontalAim:
     Value: 0
     m_SpeedMode: 1
@@ -475,7 +469,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   behavior: {fileID: 11400000, guid: 83f0850680ca0304eaae620c037c41e3, type: 2}
-  muzzlePoint: {fileID: 1710610422}
+  muzzlePoint: {fileID: 4701350042055313123}
 --- !u!114 &1001236477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -501,12 +495,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fab11eaf0ca494fa383ad2f9ca4f8da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  eyeTransform: {fileID: 0}
   vCamFreeLookLow: {fileID: 0}
   vCamFreeLookHighLeft: {fileID: 0}
   vCamFreeLookHighRight: {fileID: 0}
-  speedThreshold: 0
-  horizontalSpeedThreshold: 0
-  vCamMainLockOn: {fileID: 0}
-  targetGroup: {fileID: 0}
-  maxLockCameraDistance: 20
+  speedThreshold: 20
+  horizontalSpeedThreshold: 10
+--- !u!114 &994865003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3441652040888342025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af5c72b87e674299acb9a96c858e6ac0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lockOnRange: 100
+  lockOnAngle: 30
+  <LockOnLayer>k__BackingField:
+    serializedVersion: 2
+    m_Bits: 2048

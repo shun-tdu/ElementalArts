@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using Cinemachine;
@@ -19,11 +18,6 @@ namespace Player
         [Header("Look")] 
         [SerializeField] public float lookSensitivity = 2f;
 
-        [Header("Lock-On")] 
-        [SerializeField] private float lockOnRange = 100f;   //ロックオン可能な最大距離
-        [SerializeField] private float lockOnAngle = 30f;    //画面中心からこの角度内を探索
-        [SerializeField] private LayerMask lockOnLayer;      //ロックオン対照のレイヤー
-
         [Header("Aiming Reticle UI")] 
         [SerializeField] private Image reticleImage;
 
@@ -31,9 +25,6 @@ namespace Player
         [SerializeField] private Color reticleMainLockOnColor = Color.red;
         [SerializeField] private Color reticleSubLockOnColor = Color.yellow;
         [SerializeField] private float defaultAimDistance = 100f;
-
-
-        [SerializeField] private Transform eyeTransform;
         
         
         [Header("Input Control(Lock Axes)")] 
@@ -53,24 +44,23 @@ namespace Player
         private PlayerControls controls;
         private WeaponSystem weapon;
         private CameraManager camManager;
+        private LockOnManager lockOnManager;
         private Rigidbody rb;
-        private Transform cameraPivot;
-        private float yaw, pitch;
+        private Transform emitPoint;
+        // private float yaw, pitch;
 
-        //ロックオン関連変数
-        private Transform mainLockOnTarget;
-        private Transform subLockOnTarget;
-        private bool isAimingSubTarget = false;
-        private bool isLockedOn = false;
+
 
         private void Awake()
         {
             //コンポーネントの初期化
             rb = GetComponent<Rigidbody>();
-            cameraPivot = transform.Find("CameraPivot");
+            // cameraPivot = transform.Find("CameraPivot");
+            emitPoint = transform.Find("EmitPoint");
             controls = new PlayerControls();
             weapon = GetComponent<WeaponSystem>();
             camManager = GetComponent<CameraManager>();
+            lockOnManager = GetComponent<LockOnManager>();
             
             //イベントの購読
             //----Movement----
@@ -89,10 +79,10 @@ namespace Player
 
             //----WeaponSystem----
             controls.Player.Fire.started += _ => FireWeapon();
-            controls.Player.Fire.canceled += _ => weapon.OnTriggerUp(cameraPivot);
+            controls.Player.Fire.canceled += _ => weapon.OnTriggerUp(emitPoint);
 
             //----LockOnとAim----
-            // controls.Player.LockOn.performed += _ => ToggleLockOn();
+            controls.Player.LockOn.performed += _ => lockOnManager.ToggleLockOn(this.transform);
             // controls.Player.Aim.started += ctc => StartAimingSubTarget();
             // controls.Player.Aim.canceled += ctc => StopAimingSubTarget();
 
@@ -116,8 +106,7 @@ namespace Player
             // HandleLook();
 
             //カメラステートの更新処理
-            camManager.UpdateCameraState(rb.velocity);
-            // UpdateCameraState();
+            camManager.UpdateCameraState(transform, rb.velocity);
 
             //カーソル固定処理
             HandleCursorLock();
@@ -132,32 +121,37 @@ namespace Player
 
         private void FixedUpdate()
         {
-            //した３つは同じUpdateで呼ばないとカクつく
+            //した2つは同じUpdateで呼ばないとカクつく
             //移動処理
             HandleMovement();
-            
-
             
             //キャラクターの向きをカメラに合わせる処理
             HandleCharacterRotation();
             
             if (controls.Player.Fire.IsPressed())
             {
-                weapon.OnTriggerHold(cameraPivot);
-                weapon.SetLockOnTarget(GetCurrentTarget());
+                weapon.OnTriggerHold(emitPoint);
+                weapon.SetLockOnTarget(lockOnManager.GetCurrentTarget());
             }
         }
         
-
+        /// <summary>
+        /// Playerのターゲットを指定するメソッド
+        /// </summary>
+        /// <param name="target">ターゲットのTransform</param>
+        public void SetTarget(Transform target)
+        {
+            weapon.SetLockOnTarget(target);
+        }
+        
+        
         private void HandleCharacterRotation()
         {
-            if (!isLockedOn)
-            {
-                var horizontalRotation = Quaternion.AngleAxis(horizontalAim.Value, Vector3.up);
-                var verticalRotation = Quaternion.AngleAxis(verticalAim.Value, Vector3.right);
-                transform.rotation = horizontalRotation;
-                eyeTransform.localRotation = verticalRotation;
-            }
+            var horizontalRotation = Quaternion.AngleAxis(horizontalAim.Value, Vector3.up);
+            var verticalRotation = Quaternion.AngleAxis(verticalAim.Value, Vector3.right);
+            transform.rotation = horizontalRotation;
+            camManager.EyeTransform.localRotation = verticalRotation;
+            
             // if (isLockedOn && mainLockOnTarget != null)
             // {
             //     Vector3 directionToTarget = mainLockOnTarget.position - transform.position;
@@ -182,51 +176,12 @@ namespace Player
         }
 
         /// <summary>
-        /// 視線処理をまとめた関数
-        /// </summary>
-        // private void HandleLook()
-        // {
-        //     //メインロックオン時はキャラクターが常にターゲットの方向を向く
-        //     if (mainLockOnTarget != null && !isAimingSubTarget)
-        //     {
-        //         Vector3 directionToTarget = mainLockOnTarget.position - transform.position;
-        //         directionToTarget.y = 0;
-        //         Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
-        //         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
-        //         yaw = transform.eulerAngles.y;
-        //     }
-        //     //通常時とサブエイム時はマウス操作
-        //     else
-        //     {
-        //         yaw += lookInput.x * lookSensitivity;
-        //         transform.rotation = Quaternion.Euler(0, yaw, 0);
-        //     }
-        //
-        //     pitch -= lookInput.y * lookSensitivity;
-        //     pitch = Mathf.Clamp(pitch, -80f, 80f);
-        //     cameraPivot.localRotation = Quaternion.Euler(pitch, 0, 0);
-        // }
-
-        /// <summary>
         /// 移動処理をまとめた関数
         /// </summary>
         private void HandleMovement()
         {
 
-            Vector3 moveDirection;
-
-            if (isLockedOn && mainLockOnTarget != null)
-            {
-                Vector3 forwardToTarget = mainLockOnTarget.position - transform.position;
-                forwardToTarget.y = 0;
-                forwardToTarget.Normalize();
-                Vector3 rightToTarget = Vector3.Cross(Vector3.up, forwardToTarget);
-                moveDirection = rightToTarget * moveRawInput.x + forwardToTarget * moveRawInput.y;
-            }
-            else
-            {
-                moveDirection = transform.right * moveRawInput.x + transform.forward * moveRawInput.y;
-            }
+            Vector3 moveDirection= transform.right * moveRawInput.x + transform.forward * moveRawInput.y;
             
             //目標速度計算
             Vector3 targetVel = new Vector3(moveDirection.x, rb.velocity.y, moveDirection.z)* moveSpeed;
@@ -256,115 +211,11 @@ namespace Player
         /// </summary>
         private void FireWeapon()
         {
-            //todo 暫定処理でTriggerDown時にターゲットを渡す処理にしている 不具合があればOnTriggerDownでターゲットを渡す
-            Transform target = GetCurrentTarget();
-            weapon.OnTriggerDown(cameraPivot);
+            Transform target = lockOnManager.GetCurrentTarget();
+            weapon.OnTriggerDown(emitPoint);
             weapon.SetLockOnTarget(target);
         }
-
-        /// <summary>
-        /// 現在ロックオン中のターゲットを返す
-        /// </summary>
-        private Transform GetCurrentTarget()
-        {
-            return isAimingSubTarget ? subLockOnTarget : mainLockOnTarget;
-        }
         
-
-        // private void ToggleLockOn()
-        // {
-        //     if (isLockedOn)
-        //     {
-        //         isLockedOn = false;
-        //         mainLockOnTarget = null;
-        //         UpdateTargetGroup();
-        //         weapon.SetLockOnTarget(null);
-        //     }
-        //     else
-        //     {
-        //         FindBestTarget();
-        //         if (mainLockOnTarget != null)
-        //         {
-        //             isLockedOn = true;
-        //             UpdateTargetGroup();
-        //             weapon.SetLockOnTarget(mainLockOnTarget);
-        //         }
-        //     }
-        // }
-
-        // private void UpdateTargetGroup()
-        // {
-        //     if (mainLockOnTarget != null)
-        //     {
-        //         // ターゲットグループのメンバーをプレイヤーとメインターゲットの2つに設定
-        //         targetGroup.m_Targets = new CinemachineTargetGroup.Target[2]
-        //         {
-        //             new CinemachineTargetGroup.Target { target = this.transform, weight = 1, radius = 1 },
-        //             new CinemachineTargetGroup.Target { target = mainLockOnTarget, weight = 1, radius = 1 }
-        //         };
-        //     }
-        //     else
-        //     {
-        //         targetGroup.m_Targets = new CinemachineTargetGroup.Target[1]
-        //         {
-        //             new CinemachineTargetGroup.Target { target = this.transform, weight = 1, radius = 1 }
-        //         };
-        //     }
-        // }
-
-        private void StartAimingSubTarget()
-        {
-            isAimingSubTarget = true;
-            if (mainLockOnTarget != null)
-                subLockOnTarget = mainLockOnTarget;
-        }
-
-        private void StopAimingSubTarget()
-        {
-            isAimingSubTarget = false;
-        }
-        
-        
-        /// <summary>
-        /// Playerから球状の領域を発生
-        /// 領域内の敵をリストアップ
-        /// 最も近い敵をmainLockOnTargetに設定
-        /// </summary>
-        private void FindBestTarget()
-        {
-            //シーン内のすべての敵候補を検索
-            Collider[] potentialTargets = Physics.OverlapSphere(transform.position, lockOnRange, lockOnLayer);
-
-            Transform bestTarget = null;
-            float minScreenDistance = float.MaxValue;
-
-            Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
-
-            foreach (var targetCollider in potentialTargets)
-            {
-                Vector3 directionToTarget = targetCollider.transform.position - cameraPivot.position;
-
-                if (Vector3.Angle(cameraPivot.forward, directionToTarget) < lockOnAngle)
-                {
-                    Vector3 screenPoint = Camera.main.WorldToScreenPoint(targetCollider.transform.position);
-                    if (screenPoint.z > 0)
-                    {
-                        float distance = Vector2.Distance(screenPoint, screenCenter);
-                        if (distance < minScreenDistance)
-                        {
-                            minScreenDistance = distance;
-                            bestTarget = targetCollider.transform;
-                        }
-                    }
-                }
-            }
-
-            mainLockOnTarget = bestTarget;
-            if (mainLockOnTarget != null)
-            {
-                Debug.Log($"ロックオン: {mainLockOnTarget.name}");
-            }
-        }
 
         /// <summary>
         /// レティクル関連の処理
@@ -374,9 +225,9 @@ namespace Player
             if (reticleImage == null || Camera.main == null) return;
 
             //----サブロックオン状態(最優先)----
-            if (isAimingSubTarget && subLockOnTarget != null)
+            if (lockOnManager.IsAimingSubTarget &&  lockOnManager.SubLockOnTarget != null)
             {
-                Vector3 screenPosition = Camera.main.WorldToScreenPoint(subLockOnTarget.position);
+                Vector3 screenPosition = Camera.main.WorldToScreenPoint(lockOnManager.SubLockOnTarget.position);
 
                 // ターゲットがカメラの前方にあり、かつ画面内にいるかチェック
                 if (screenPosition.z > 0 &&
@@ -393,9 +244,9 @@ namespace Player
                 }
             }
             // --- 2. メインロックオン状態 ---
-            else if (mainLockOnTarget != null)
+            else if (lockOnManager.MainLockOnTarget != null)
             {
-                Vector3 screenPosition = Camera.main.WorldToScreenPoint(mainLockOnTarget.position);
+                Vector3 screenPosition = Camera.main.WorldToScreenPoint(lockOnManager.MainLockOnTarget.position);
 
                 if (screenPosition.z > 0 &&
                     screenPosition.x > 0 && screenPosition.x < Screen.width &&
@@ -417,11 +268,12 @@ namespace Player
                 reticleImage.color = reticleNormalColor; // 通常の色に
 
                 // レイをカメラの中心から正面に飛ばす
-                Ray ray = new Ray(cameraPivot.position, cameraPivot.forward);
+                // Ray ray = new Ray(cameraPivot.position, cameraPivot.forward);
+                Ray ray = new Ray(camManager.EyeTransform.position,  camManager.EyeTransform.forward);   
                 Vector3 targetPoint;
 
                 // レイがロックオン対象レイヤーの何かに当たったら
-                if (Physics.Raycast(ray, out RaycastHit hit, float.MaxValue, lockOnLayer))
+                if (Physics.Raycast(ray, out RaycastHit hit, float.MaxValue, lockOnManager.LockOnLayer))
                 {
                     targetPoint = hit.point; // 当たった地点を照準のターゲットとする
                 }
