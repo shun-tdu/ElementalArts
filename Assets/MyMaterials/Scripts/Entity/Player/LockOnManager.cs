@@ -9,14 +9,18 @@ namespace Player
         [Header("Lock-On")] 
         [SerializeField] private float lockOnRange = 100f;   //ロックオン可能な最大距離
         [SerializeField] private float lockOnAngle = 30f;    //画面中心からこの角度内を探索
+        [field:SerializeField]public LayerMask LockOnLayer { get; private set; }
+
+        [Header("Lock-On Box UI")] 
+        [SerializeField] private RectTransform lockOnBoxUI;
         
         //ロックオン関連フィールド
-        [field:SerializeField]public LayerMask LockOnLayer { get; private set; } 
         public Transform MainLockOnTarget { get; private set; }
         public Transform SubLockOnTarget { get; private set; }
         public bool IsLockedOn { get; private set; } = false;
         public bool IsAimingSubTarget { get; private set; } = false;
 
+        private Camera mainCamera;
         private CameraManager camManager;
         private PlayerController playerController;
         private DestructionNotifier currentNotifier;
@@ -25,6 +29,107 @@ namespace Player
         {
             camManager = GetComponent<CameraManager>();
             playerController = GetComponent<PlayerController>();
+            mainCamera = Camera.main;
+        }
+
+        private void Update()
+        {
+            if (IsLockedOn)
+            {
+                CheckIfTargetIsOutOfBox();
+            }
+            else
+            {
+                SearchForTargetInBox();
+            }
+        }
+
+        /// <summary>
+        /// レティクル領域内の最も近いターゲットを取得
+        /// ロックオン処理を行う
+        /// </summary>
+        private void SearchForTargetInBox()
+        {
+            var potentialTargets = Physics.OverlapSphere(transform.position, lockOnRange, LockOnLayer);
+
+            Transform bestTarget = null;
+            float minScreenDistace = float.MaxValue;
+            Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
+
+            foreach (var targetCollider in potentialTargets)
+            {
+                if (IsTargetInLockOnZone(targetCollider.transform))
+                {
+                    Vector3 screenPoint = mainCamera.WorldToScreenPoint(targetCollider.transform.position);
+                    float distance = Vector2.Distance(screenPoint, screenCenter);
+                    if (distance < minScreenDistace)
+                    {
+                        minScreenDistace = distance;
+                        bestTarget = targetCollider.transform;
+                    }
+                }
+            }
+
+            if (bestTarget != null)
+            {
+                LockOnTo(bestTarget);
+            }
+        }
+
+        private void CheckIfTargetIsOutOfBox()
+        {
+            if (MainLockOnTarget == null || !MainLockOnTarget.gameObject.activeInHierarchy)
+            {
+                ClearLock();
+                return;
+            }
+
+            if (!IsTargetInLockOnZone(MainLockOnTarget))
+            {
+                ClearLock();
+            }
+        }
+        
+        
+        /// <summary>
+        /// ターゲットがレティクル領域内に存在するか確認
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        private bool IsTargetInLockOnZone(Transform target)
+        {
+            if (lockOnBoxUI == null || mainCamera == null) return false;
+            //ワールド座標をスクリーン座標に変換
+            Vector3 screenPoint = mainCamera.WorldToScreenPoint(target.position);
+            if (screenPoint.z <= 0) return false;
+            
+            // レティクルの中心座標を取得
+            Vector2 zoneCenter = lockOnBoxUI.position;
+            
+            // 中心からターゲットのスクリーン座標までの距離を計算
+            float lockOnRadius = lockOnBoxUI.rect.width / 2f;
+            float distanceToTarget = Vector2.Distance(zoneCenter, screenPoint);
+
+            // 距離が半径の内側にあればtrue、外側にあればfalseを返す
+            return distanceToTarget <= lockOnRadius;
+        }
+        
+        /// <summary>
+        /// 引数のtargetに対してロックオン処理
+        /// 破壊時のイベント購読、PlayerControllerクラスへのターゲット指定を行う
+        /// </summary>
+        /// <param name="target"></param>
+        private void LockOnTo(Transform target)
+        {
+            if(IsLockedOn) return;
+
+            MainLockOnTarget = target;
+            IsLockedOn = true;
+
+            currentNotifier = MainLockOnTarget.GetComponent<DestructionNotifier>() ??
+                              MainLockOnTarget.gameObject.AddComponent<DestructionNotifier>();
+            currentNotifier.OnDestroyed += OnTargetDestroyed;
+            playerController.SetTarget(MainLockOnTarget);
         }
 
         /// <summary>
@@ -35,26 +140,26 @@ namespace Player
         /// <param name="playerTransform"></param>
         public void ToggleLockOn(Transform playerTransform)
         {
-            if (IsLockedOn)
-            {
-                // IsLockedOn = false;
-                // MainLockOnTarget = null;
-                // playerController.SetTarget(null);
-                ClearLock();
-            }
-            else
-            {
-                FindBestTarget(playerTransform);
-                if (MainLockOnTarget != null)
-                {
-                    //通知コンポーネントを取得
-                    currentNotifier = MainLockOnTarget.GetComponent<DestructionNotifier>() ??
-                                      MainLockOnTarget.gameObject.AddComponent<DestructionNotifier>();
-                    currentNotifier.OnDestroyed += HandleTargetDestroyed;
-                    IsLockedOn = true;
-                    playerController.SetTarget(MainLockOnTarget);
-                }
-            }
+            // if (IsLockedOn)
+            // {
+            //     // IsLockedOn = false;
+            //     // MainLockOnTarget = null;
+            //     // playerController.SetTarget(null);
+            //     ClearLock();
+            // }
+            // else
+            // {
+            //     FindBestTarget(playerTransform);
+            //     if (MainLockOnTarget != null)
+            //     {
+            //         //通知コンポーネントを取得
+            //         currentNotifier = MainLockOnTarget.GetComponent<DestructionNotifier>() ??
+            //                           MainLockOnTarget.gameObject.AddComponent<DestructionNotifier>();
+            //         currentNotifier.OnDestroyed += HandleTargetDestroyed;
+            //         IsLockedOn = true;
+            //         playerController.SetTarget(MainLockOnTarget);
+            //     }
+            // }
         }
         
         /// <summary>
@@ -65,71 +170,24 @@ namespace Player
             return IsAimingSubTarget ? SubLockOnTarget : MainLockOnTarget;
         }
 
-
-        /// <summary>
-        /// 指定したTransformから球状の領域を発生
-        /// 領域内の敵をリストアップ
-        /// 最も近い敵をmainLockOnTargetに設定
-        /// </summary>
-        private void FindBestTarget(Transform transformFrom)
-        {
-            //シーン内のすべての敵候補を検索
-            Collider[] potentialTargets = Physics.OverlapSphere(transformFrom.position, lockOnRange, LockOnLayer);
-
-            Transform bestTarget = null;
-            float minScreenDistance = float.MaxValue;
-
-            Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
-
-            foreach (var targetCollider in potentialTargets)
-            {
-                // Vector3 directionToTarget = targetCollider.transform.position - cameraPivot.position;
-                Vector3 directionToTarget = targetCollider.transform.position - camManager.EyeTransform.position;
-
-                if (Vector3.Angle(camManager.EyeTransform.forward, directionToTarget) < lockOnAngle)
-                {
-                    Vector3 screenPoint = Camera.main.WorldToScreenPoint(targetCollider.transform.position);
-                    if (screenPoint.z > 0)
-                    {
-                        float distance = Vector2.Distance(screenPoint, screenCenter);
-                        if (distance < minScreenDistance)
-                        {
-                            minScreenDistance = distance;
-                            bestTarget = targetCollider.transform;
-                        }
-                    }
-                }
-            }
-
-            MainLockOnTarget = bestTarget;
-        }
-
-        private void HandleTargetDestroyed()
+        //ターゲット破壊時のコールバック
+        private void OnTargetDestroyed()
         {
             ClearLock();
         }
         
+        /// <summary>
+        /// ロックオン解除処理
+        /// </summary>
         private void ClearLock()
         {
             IsLockedOn = false;
             if (currentNotifier != null)
-                currentNotifier.OnDestroyed -= HandleTargetDestroyed;
+                currentNotifier.OnDestroyed -= OnTargetDestroyed;
             
             currentNotifier = null;
             MainLockOnTarget = null;
             playerController.SetTarget(null);
-        }
-        
-        private void StartAimingSubTarget()
-        {
-            IsAimingSubTarget = true;
-            if (MainLockOnTarget != null)
-                SubLockOnTarget = MainLockOnTarget;
-        }
-
-        private void StopAimingSubTarget()
-        {
-            IsAimingSubTarget = false;
         }
     }
 }

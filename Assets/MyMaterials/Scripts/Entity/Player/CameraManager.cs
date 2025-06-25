@@ -35,8 +35,8 @@ namespace Player
         {
             Vector3 localVelocity = playerTransform.InverseTransformDirection(playerVelocity);
             float localRightSpeed = localVelocity.x;
-            float localForwardSoeed = localVelocity.z;
-            float speed = new Vector2(localRightSpeed, localForwardSoeed).magnitude;
+            float localForwardSpeed = localVelocity.z;
+            float speed = new Vector2(localRightSpeed, localForwardSpeed).magnitude;
 
 
             //低速時は画面中央に機体を表示

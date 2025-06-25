@@ -492,15 +492,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 994865003, guid: fca17c8fc0a1078409e428ca4175ca99, type: 3}
+      propertyPath: lockOnBoxUI
+      value: 
+      objectReference: {fileID: 2141319034}
     - target: {fileID: 1001236468, guid: fca17c8fc0a1078409e428ca4175ca99, type: 3}
       propertyPath: reticleImage
       value: 
       objectReference: {fileID: 164280277}
-    - target: {fileID: 56722849309732816, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: m_Name
-      value: EmitPoint
-      objectReference: {fileID: 0}
     - target: {fileID: 2632605664917425331, guid: fca17c8fc0a1078409e428ca4175ca99,
         type: 3}
       propertyPath: m_RootOrder
@@ -563,26 +562,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5172463605891014650, guid: fca17c8fc0a1078409e428ca4175ca99,
         type: 3}
-      propertyPath: targetGroup
-      value: 
-      objectReference: {fileID: 141765562}
-    - target: {fileID: 5172463605891014650, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: eyeTransform
-      value: 
-      objectReference: {fileID: 223194414}
-    - target: {fileID: 5172463605891014650, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: speedThreshold
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 5172463605891014650, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: vCamMainLockOn
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 5172463605891014650, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
       propertyPath: vCamFreeLookLow
       value: 
       objectReference: {fileID: 1509876229}
@@ -593,43 +572,13 @@ PrefabInstance:
       objectReference: {fileID: 1638426148}
     - target: {fileID: 5172463605891014650, guid: fca17c8fc0a1078409e428ca4175ca99,
         type: 3}
-      propertyPath: maxLockCameraDistance
-      value: 200
-      objectReference: {fileID: 0}
-    - target: {fileID: 5172463605891014650, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
       propertyPath: vCamFreeLookHighRight
       value: 
       objectReference: {fileID: 207492877}
-    - target: {fileID: 5172463605891014650, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: horizontalSpeedThreshold
-      value: 10
-      objectReference: {fileID: 0}
     - target: {fileID: 7352447070098369483, guid: fca17c8fc0a1078409e428ca4175ca99,
         type: 3}
       propertyPath: m_LocalPosition.x
       value: 5.65
-      objectReference: {fileID: 0}
-    - target: {fileID: 7352447070098369483, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.6615522
-      objectReference: {fileID: 0}
-    - target: {fileID: 7352447070098369483, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -13.125885
-      objectReference: {fileID: 0}
-    - target: {fileID: 8935971549394861270, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0.26
-      objectReference: {fileID: 0}
-    - target: {fileID: 8935971549394861270, guid: fca17c8fc0a1078409e428ca4175ca99,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 4.54
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fca17c8fc0a1078409e428ca4175ca99, type: 3}
@@ -966,12 +915,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac0b09e7857660247b1477e93731de29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &405149084 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3441652040888342025, guid: fca17c8fc0a1078409e428ca4175ca99,
-    type: 3}
-  m_PrefabInstance: {fileID: 223194413}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1860,23 +1803,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 993721622}
   m_CullTransparentMesh: 1
---- !u!114 &994865003
+--- !u!114 &994865003 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 994865003, guid: fca17c8fc0a1078409e428ca4175ca99,
+    type: 3}
+  m_PrefabInstance: {fileID: 223194413}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 405149084}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: af5c72b87e674299acb9a96c858e6ac0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lockOnRange: 100
-  lockOnAngle: 30
-  <LockOnLayer>k__BackingField:
-    serializedVersion: 2
-    m_Bits: 2048
 --- !u!1 &1018158819
 GameObject:
   m_ObjectHideFlags: 3
@@ -2930,7 +2868,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2141319034
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2949,7 +2887,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 400}
+  m_SizeDelta: {x: 500, y: 500}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2141319035
 MonoBehaviour:

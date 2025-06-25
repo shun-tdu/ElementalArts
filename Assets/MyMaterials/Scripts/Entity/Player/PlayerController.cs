@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cinemachine;
+
+using Cysharp.Threading.Tasks;
+
 using weapon;
 
 namespace Player
@@ -20,7 +23,6 @@ namespace Player
 
         [Header("Aiming Reticle UI")] 
         [SerializeField] private Image reticleImage;
-
         [SerializeField] private Color reticleNormalColor;
         [SerializeField] private Color reticleMainLockOnColor = Color.red;
         [SerializeField] private Color reticleSubLockOnColor = Color.yellow;
@@ -30,6 +32,10 @@ namespace Player
         [Header("Input Control(Lock Axes)")] 
         public AxisState horizontalAim;
         public AxisState verticalAim;
+
+        [Header("Dash Settings")] 
+        [SerializeField] private float dashForce = 15f;     //ダッシュのインパルス強度
+        [SerializeField] private float dashCoolDown = 1.0f; //ダッシュのクールダウン
         
         /*========内部状態変数========*/
         //操作系入力値
@@ -39,6 +45,7 @@ namespace Player
         private bool isThrustUp = false;
         private bool isThrustDown = false;
         private bool isFireSecondaryWeapon = false;
+        private bool canDash = true;
 
         //アタッチされているコンポーネントの内部参照
         private PlayerControls controls;
@@ -47,9 +54,7 @@ namespace Player
         private LockOnManager lockOnManager;
         private Rigidbody rb;
         private Transform emitPoint;
-        // private float yaw, pitch;
-
-
+        
 
         private void Awake()
         {
@@ -76,7 +81,11 @@ namespace Player
             controls.Player.ThrustUp.canceled += ctx => isThrustUp = false;
             controls.Player.ThrustDown.performed += ctx => isThrustDown = true;
             controls.Player.ThrustDown.canceled += ctx => isThrustDown = false;
-
+            
+            //----Dash----
+            controls.Player.Dash.performed += ctx => TryDash();
+            
+            
             //----WeaponSystem----
             controls.Player.Fire.started += _ => FireWeapon();
             controls.Player.Fire.canceled += _ => weapon.OnTriggerUp(emitPoint);
@@ -184,7 +193,7 @@ namespace Player
             Vector3 moveDirection= transform.right * moveRawInput.x + transform.forward * moveRawInput.y;
             
             //目標速度計算
-            Vector3 targetVel = new Vector3(moveDirection.x, rb.velocity.y, moveDirection.z)* moveSpeed;
+            Vector3 targetVel = new Vector3(moveDirection.x, 0, moveDirection.z)* moveSpeed;
             
             //加減速の判定
             Vector2 current2D = new Vector2(rb.velocity.x, rb.velocity.z);
@@ -205,7 +214,41 @@ namespace Player
             if (isThrustUp) rb.AddForce(Vector3.up * thrustAccel, ForceMode.Acceleration);
             if (isThrustDown) rb.AddForce(Vector3.down * thrustAccel, ForceMode.Acceleration);
         }
+        
+        /// <summary>
+        /// ダッシュを試みる
+        /// ダッシュ可能かを判断し、可能ならダッシュ処理を呼ぶ
+        /// </summary>
+        private void TryDash()
+        {
+            //ダッシュフラグが立っていて、入力があればダッシュをする
+            if(!canDash || moveRawInput.sqrMagnitude < 0.01f) return;
+            DoDashAsync().Forget();
+        }
+        
+        /// <summary>
+        /// ダッシュ処理
+        /// 入力方向にインパルスで力を加える
+        /// クールダウンまで待つ非同期関数
+        /// </summary>
+        private async UniTaskVoid DoDashAsync()
+        {
+            canDash = false;
+            
+            //入力方向の単位ベクトルを取得
+            Vector3 dir = (transform.right * moveRawInput.x + transform.forward * moveRawInput.y).normalized;
+            if (dir.sqrMagnitude < 0.01f) dir = transform.forward;
+            
+            //インパルスを一度だけ加える
+            rb.AddForce(dir * dashForce,ForceMode.Impulse);
+            
+            // TODO 無敵処理など
 
+            await UniTask.Delay((int)(dashCoolDown * 1000));
+
+            canDash = true;
+        }
+        
         /// <summary>
         /// 攻撃処理をまとめた関数
         /// </summary>
