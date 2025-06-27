@@ -10,7 +10,6 @@ namespace Player
     /// Playerのロックオンステート
     /// Free:未ロックオン
     /// Weak:弱ロックオン 大レティクル内に入った敵をターゲットにする、大レティクルから外れたらロックオン解除
-    /// 
     /// </summary>
     public enum LockOnState
     {
@@ -21,29 +20,24 @@ namespace Player
 
     public class LockOnManager : MonoBehaviour
     {
-        [Header("Aiming Reticle UI")] [SerializeField]
-        private Image reticleImage;
-
+        [Header("Aiming Reticle UI")] 
+        [SerializeField] private Image reticleImage;
         [SerializeField] private Color reticleNormalColor;
         [SerializeField] private Color reticleMainLockOnColor = Color.red;
-        [SerializeField] private float defaultAimDistance = 100f;
 
-        [Header("Lock-On")] [SerializeField] private float lockOnRange = 100f;  //ロックオン可能な最大距離
-        [SerializeField] private float lockOnAngle = 30f;                       //画面中心からこの角度内を探索
+        [Header("Lock-On")]
+        [SerializeField] private float lockOnRange = 100f;  //ロックオン可能な最大距離
         [field: SerializeField] public LayerMask LockOnLayer { get; private set; }
 
         [Header("Lock-On Box UI")]
-        // [SerializeField] private RectTransform lockOnBoxUI;
         [SerializeField] private Image lockOnBoxUI;
 
         //ロックオン関連フィールド
         public Transform MainLockOnTarget { get; private set; }
         public Transform SubLockOnTarget { get; private set; }
         public bool IsLockedOn { get; private set; } = false;
-        public bool IsAimingSubTarget { get; private set; } = false;
-
+        
         private Camera mainCamera;
-        private CameraManager camManager;
         private PlayerController playerController;
         private DestructionNotifier currentNotifier;
 
@@ -52,7 +46,6 @@ namespace Player
         
         private void Awake()
         {
-            camManager = GetComponent<CameraManager>();
             playerController = GetComponent<PlayerController>();
             mainCamera = Camera.main;
         }
@@ -77,14 +70,12 @@ namespace Player
                 (currentState == LockOnState.Intention && !MainLockOnTarget))
             {
                 ChangeLockOnState(LockOnState.Free);
-                Debug.Log("Changed to Free");
             }
             
             //WeakLock → Intentionへの遷移
             if (currentState == LockOnState.Weak && playerController.LockOnAction.triggered)
             {
                 ChangeLockOnState(LockOnState.Intention);
-                Debug.Log("Changed to Intention");
             }
 
 
@@ -153,22 +144,24 @@ namespace Player
                     lockOnBoxUI.enabled = true;
                     
                     //----小レティクルを画面中央に戻す----/
-                    RectTransform reticleImageRectTransform = reticleImage.rectTransform;
-                    reticleImageRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                    reticleImageRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                    reticleImageRectTransform.pivot = new Vector2(0.5f, 0.5f);
-                    reticleImageRectTransform.anchoredPosition = Vector2.zero;
+                    // RectTransform reticleImageRectTransform = reticleImage.rectTransform;
+                    // reticleImageRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                    // reticleImageRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                    // reticleImageRectTransform.pivot = new Vector2(0.5f, 0.5f);
+                    // reticleImageRectTransform.anchoredPosition = Vector2.zero;
+                    ResetUIToCenter(reticleImage);
                     
                     //----大レティクルを画面中央に戻す----/
-                    RectTransform lockOnBoxUIRectTransform = lockOnBoxUI.rectTransform;
-                    lockOnBoxUIRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                    lockOnBoxUIRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                    lockOnBoxUIRectTransform.pivot = new Vector2(0.5f, 0.5f);
-                    lockOnBoxUIRectTransform.anchoredPosition = Vector2.zero;
+                    // RectTransform lockOnBoxUIRectTransform = lockOnBoxUI.rectTransform;
+                    // lockOnBoxUIRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                    // lockOnBoxUIRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                    // lockOnBoxUIRectTransform.pivot = new Vector2(0.5f, 0.5f);
+                    // lockOnBoxUIRectTransform.anchoredPosition = Vector2.zero;
+                    ResetUIToCenter(lockOnBoxUI);
                     break;
 
                 case LockOnState.Weak:
-                    //小レティクルと大レティクルの有効化
+                    //Todo 小レティクルと大レティクルの有効化
                     break;
                 case LockOnState.Intention:
                     //小レティクルと大レティクルの有効化
@@ -202,7 +195,7 @@ namespace Player
             if (!MainLockOnTarget) return;
 
             //小レティクルの移動処理
-            Vector3 screenPosition = Camera.main.WorldToScreenPoint(MainLockOnTarget.position);
+            Vector3 screenPosition = mainCamera.WorldToScreenPoint(MainLockOnTarget.position);
 
             if (screenPosition.z > 0 &&
                 screenPosition.x > 0 && screenPosition.x < Screen.width &&
@@ -226,7 +219,7 @@ namespace Player
         {
             //小レティクルと大レティクルをターゲットに追従
             if(!MainLockOnTarget) return;
-            Vector3 screenPosition = Camera.main.WorldToScreenPoint(MainLockOnTarget.position);
+            Vector3 screenPosition = mainCamera.WorldToScreenPoint(MainLockOnTarget.position);
             
             if (screenPosition.z > 0 &&
                 screenPosition.x > 0 && screenPosition.x < Screen.width &&
@@ -345,7 +338,7 @@ namespace Player
         /// </summary>
         public Transform GetCurrentTarget()
         {
-            return IsAimingSubTarget ? SubLockOnTarget : MainLockOnTarget;
+            return MainLockOnTarget;
         }
 
         
@@ -355,6 +348,17 @@ namespace Player
             ClearLock();
         }
 
+        
+        /// <summary>
+        /// レティクルを初期化する
+        /// </summary>
+        /// <param name="img">初期化するImage</param>
+        private void ResetUIToCenter(Image img)
+        {
+            RectTransform rt = img.rectTransform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+        }
         
         /// <summary>
         /// ロックオン解除処理

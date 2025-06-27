@@ -17,7 +17,21 @@ namespace Player
         [SerializeField] public float thrustAccel = 30f;
         [SerializeField] private float accelTime = 0.2f;
         [SerializeField] private float decelTime = 0.5f;
-        private Vector3 currentVelocity;
+        
+        [Header("Step Settings")] 
+        [SerializeField] private float stepForce = 15f;     //ダッシュのインパルス強度
+        [SerializeField] private float stepCoolDown = 1.0f; //ダッシュのクールダウン
+
+        [Header("Dash Settings")] 
+        [SerializeField] private float dashSpeed = 80f;
+        [SerializeField] private float dashEnergyMax = 100f;
+        [SerializeField] private float dashEnergyConsume = 10f;
+        [SerializeField] private float dashEnergyRegeneration = 20f;
+        [SerializeField] private float dashHoldThreshold = 0.2f;
+        private float currentDashEnergy;
+        private float dashHoldTime = 0f;
+        private bool isDashing = false;
+        private bool isDashHeld = false;
         
         [Header("Look")] 
         [SerializeField] public float lookSensitivity = 2f;
@@ -26,9 +40,7 @@ namespace Player
         public AxisState horizontalAim;
         public AxisState verticalAim;
 
-        [Header("Dash Settings")] 
-        [SerializeField] private float dashForce = 15f;     //ダッシュのインパルス強度
-        [SerializeField] private float dashCoolDown = 1.0f; //ダッシュのクールダウン
+
         
         /*========内部状態変数========*/
         //操作系入力値
@@ -37,7 +49,8 @@ namespace Player
         private bool isThrustUp = false;
         private bool isThrustDown = false;
         private bool isFireSecondaryWeapon = false;
-        private bool canDash = true;
+        private bool canStep = true;
+        private Vector3 currentVelocity;
 
         //アタッチされているコンポーネントの内部参照
         private PlayerControls controls;
@@ -67,27 +80,23 @@ namespace Player
             controls.Player.Move.performed += ctx => moveRawInput = ctx.ReadValue<Vector2>();
             controls.Player.Move.canceled += ctx => moveRawInput = Vector2.zero;
 
-            //----Lock----
-            // controls.Player.Look.performed += ctx => lookInput = ctx.ReadValue<Vector2>();
-            // controls.Player.Look.canceled += ctx => lookInput = Vector2.zero;
-
             //----Thrust----
             controls.Player.ThrustUp.performed += ctx => isThrustUp = true;
             controls.Player.ThrustUp.canceled += ctx => isThrustUp = false;
             controls.Player.ThrustDown.performed += ctx => isThrustDown = true;
             controls.Player.ThrustDown.canceled += ctx => isThrustDown = false;
             
+            //----Step----
+            controls.Player.Step.performed += ctx => TryStep();
+            
             //----Dash----
-            controls.Player.Dash.performed += ctx => TryDash();
+            controls.Player.Dash.performed += _ => StartDashHold();
+            controls.Player.Dash.canceled += _ => EndDashHold();
             
             
             //----WeaponSystem----
             controls.Player.Fire.started += _ => FireWeapon();
             controls.Player.Fire.canceled += _ => weapon.OnTriggerUp(emitPoint);
-
-            //----LockOnとAim----
-            // controls.Player.LockOn.performed += _ => lockOnManager.ToggleLockOn(this.transform);
-
         }
 
         private void Start()
@@ -95,6 +104,8 @@ namespace Player
             //----カーソルの画面固定処理----
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+
+            currentDashEnergy = dashEnergyMax;
         }
 
         private void OnEnable() => controls.Player.Enable();
@@ -102,21 +113,25 @@ namespace Player
 
         private void Update()
         {
-            //視線の更新処理
-            // HandleLook();
-
             //カメラステートの更新処理
             camManager.UpdateCameraState(transform, rb.velocity);
-
-            //カーソル固定処理
-            HandleCursorLock();
-            
-            //レティクルの更新処理
-            // UpdateReticle();
             
             //AxisStateの更新処理
             horizontalAim.Update(Time.deltaTime);
             verticalAim.Update(Time.deltaTime);
+            
+            //ダッシュの入力処理
+            if (isDashHeld)
+            {
+                dashHoldTime += Time.deltaTime;
+                if (dashHoldTime >= dashHoldThreshold)
+                {
+                    BeginDash();
+                }
+            }
+            
+            //カーソル固定処理
+            HandleCursorLock();
         }
 
         private void FixedUpdate()
@@ -124,6 +139,16 @@ namespace Player
             //した2つは同じUpdateで呼ばないとカクつく
             //移動処理
             HandleMovement();
+            
+            //ダッシュ処理
+            if (isDashing && currentDashEnergy > dashEnergyConsume)
+            {
+                DoDash();
+                ConsumeDashEnergy();
+            }else if (!isDashing)
+            {
+                RegenerateDashEnergy();
+            }
             
             //キャラクターの向きをカメラに合わせる処理
             HandleCharacterRotation();
@@ -135,6 +160,7 @@ namespace Player
             }
         }
         
+        
         /// <summary>
         /// Playerのターゲットを指定するメソッド
         /// </summary>
@@ -145,6 +171,9 @@ namespace Player
         }
         
         
+        /// <summary>
+        /// プレイヤーの回転処理
+        /// </summary>
         private void HandleCharacterRotation()
         {
             var horizontalRotation = Quaternion.AngleAxis(horizontalAim.Value, Vector3.up);
@@ -174,6 +203,7 @@ namespace Player
             //     }
             // }
         }
+        
 
         /// <summary>
         /// 移動処理をまとめた関数
@@ -206,39 +236,128 @@ namespace Player
             if (isThrustDown) rb.AddForce(Vector3.down * thrustAccel, ForceMode.Acceleration);
         }
         
-        /// <summary>
-        /// ダッシュを試みる
-        /// ダッシュ可能かを判断し、可能ならダッシュ処理を呼ぶ
-        /// </summary>
-        private void TryDash()
-        {
-            //ダッシュフラグが立っていて、入力があればダッシュをする
-            if(!canDash || moveRawInput.sqrMagnitude < 0.01f) return;
-            DoDashAsync().Forget();
-        }
         
         /// <summary>
-        /// ダッシュ処理
+        /// ステップを試みる
+        /// ステップ可能かを判断し、可能ならステップ処理を呼ぶ
+        /// </summary>
+        private void TryStep()
+        {
+            Debug.Log("TryStep");
+            //ステップフラグが立っていて、入力があればダッシュをする
+            if(!canStep|| moveRawInput.sqrMagnitude < 0.01f) return;
+            DoStepAsync().Forget();
+        }
+        
+        
+        /// <summary>
+        /// ステップ処理
         /// 入力方向にインパルスで力を加える
         /// クールダウンまで待つ非同期関数
         /// </summary>
-        private async UniTaskVoid DoDashAsync()
+        private async UniTaskVoid DoStepAsync()
         {
-            canDash = false;
+            canStep = false;
             
             //入力方向の単位ベクトルを取得
             Vector3 dir = (transform.right * moveRawInput.x + transform.forward * moveRawInput.y).normalized;
             if (dir.sqrMagnitude < 0.01f) dir = transform.forward;
             
             //インパルスを一度だけ加える
-            rb.AddForce(dir * dashForce,ForceMode.Impulse);
+            rb.AddForce(dir * stepForce,ForceMode.Impulse);
             
             // TODO 無敵処理など
 
-            await UniTask.Delay((int)(dashCoolDown * 1000));
+            await UniTask.Delay((int)(stepCoolDown * 1000));
 
-            canDash = true;
+            canStep = true;
         }
+
+        
+        /// <summary>
+        /// ダッシュボタン押下処理
+        /// </summary>
+        private void StartDashHold()
+        {
+            isDashHeld = true;
+            dashHoldTime = 0f;
+        }
+        
+        
+        /// <summary>
+        /// ダッシュボタン押上処理
+        /// </summary>
+        private void EndDashHold()
+        {
+            isDashHeld = false;
+            dashHoldTime = 0f;
+            StopDash();
+        }
+
+        /// <summary>
+        /// ダッシュ開始処理
+        /// </summary>
+        private void BeginDash()
+        {
+            if (currentDashEnergy > 0f)
+                isDashing = true;
+        }
+        
+        /// <summary>
+        /// ダッシュ終了処理 
+        /// </summary>
+        private void StopDash()
+        {
+            isDashing = false;
+        }
+        
+        /// <summary>
+        /// 入力方行に基づいてダッシュを行う
+        /// </summary>
+        private void DoDash()
+        {
+            var dir = new Vector3(moveRawInput.x, 0, moveRawInput.y);
+            if (dir.sqrMagnitude < 0.1f) dir = transform.forward;
+            dir = transform.TransformDirection(dir).normalized;
+            rb.velocity = dir * dashSpeed;
+        }
+        
+        
+        /// <summary>
+        /// ダッシュエネルギーの消費処理
+        /// </summary>
+        private void ConsumeDashEnergy()
+        {
+            //エネルギーをFixedUpdate時間で減らす
+            currentDashEnergy -= dashEnergyConsume * Time.deltaTime;
+            
+            //エネルギーが0を下回らないようにする
+            if (currentDashEnergy <= 0)
+            {
+                currentDashEnergy = 0;
+                StopDash();
+            }
+            //todo エネルギーをUIに反映
+        }
+        
+        /// <summary>
+        /// ダッシュエネルギーを時間経過で回復させる処理
+        /// </summary>
+        private void RegenerateDashEnergy()
+        {
+            //最大値以上なら何もしない
+            if(currentDashEnergy <  dashEnergyMax)
+            { 
+                //エネルギー回復処理
+                currentDashEnergy += dashEnergyRegeneration * Time.deltaTime;
+            
+                //最大値クリップ
+                currentDashEnergy = Mathf.Min(currentDashEnergy, dashEnergyMax);
+
+                //todo エネルギーをUIに反映
+            }
+        }
+        
         
         /// <summary>
         /// 攻撃処理をまとめた関数
@@ -249,8 +368,6 @@ namespace Player
             weapon.OnTriggerDown(emitPoint);
             weapon.SetLockOnTarget(target);
         }
-        
-
         
         /// <summary>
         /// カーソルの更新処理

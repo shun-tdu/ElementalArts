@@ -100,9 +100,18 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Dash"",
+                    ""name"": ""Step"",
                     ""type"": ""Button"",
                     ""id"": ""c1f97e84-3313-4f1d-a6cb-4fcd2b02b3ae"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Dash"",
+                    ""type"": ""Button"",
+                    ""id"": ""7b52d6b0-f03f-44cb-a338-e68a972a38dd"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -245,7 +254,18 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""54211f7f-e37a-48fb-8a1c-cb11cc17fbd2"",
-                    ""path"": ""<Keyboard>/shift"",
+                    ""path"": ""<Mouse>/backButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Step"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5f923bc1-6171-45db-8816-71f2b79c16cb"",
+                    ""path"": ""<Keyboard>/leftShift"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -268,6 +288,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Player_SeondaryFire = m_Player.FindAction("SeondaryFire", throwIfNotFound: true);
         m_Player_LockOn = m_Player.FindAction("LockOn", throwIfNotFound: true);
         m_Player_Aim = m_Player.FindAction("Aim", throwIfNotFound: true);
+        m_Player_Step = m_Player.FindAction("Step", throwIfNotFound: true);
         m_Player_Dash = m_Player.FindAction("Dash", throwIfNotFound: true);
     }
 
@@ -338,6 +359,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_SeondaryFire;
     private readonly InputAction m_Player_LockOn;
     private readonly InputAction m_Player_Aim;
+    private readonly InputAction m_Player_Step;
     private readonly InputAction m_Player_Dash;
     public struct PlayerActions
     {
@@ -351,6 +373,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         public InputAction @SeondaryFire => m_Wrapper.m_Player_SeondaryFire;
         public InputAction @LockOn => m_Wrapper.m_Player_LockOn;
         public InputAction @Aim => m_Wrapper.m_Player_Aim;
+        public InputAction @Step => m_Wrapper.m_Player_Step;
         public InputAction @Dash => m_Wrapper.m_Player_Dash;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
@@ -385,6 +408,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Aim.started += instance.OnAim;
             @Aim.performed += instance.OnAim;
             @Aim.canceled += instance.OnAim;
+            @Step.started += instance.OnStep;
+            @Step.performed += instance.OnStep;
+            @Step.canceled += instance.OnStep;
             @Dash.started += instance.OnDash;
             @Dash.performed += instance.OnDash;
             @Dash.canceled += instance.OnDash;
@@ -416,6 +442,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Aim.started -= instance.OnAim;
             @Aim.performed -= instance.OnAim;
             @Aim.canceled -= instance.OnAim;
+            @Step.started -= instance.OnStep;
+            @Step.performed -= instance.OnStep;
+            @Step.canceled -= instance.OnStep;
             @Dash.started -= instance.OnDash;
             @Dash.performed -= instance.OnDash;
             @Dash.canceled -= instance.OnDash;
@@ -446,6 +475,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         void OnSeondaryFire(InputAction.CallbackContext context);
         void OnLockOn(InputAction.CallbackContext context);
         void OnAim(InputAction.CallbackContext context);
+        void OnStep(InputAction.CallbackContext context);
         void OnDash(InputAction.CallbackContext context);
     }
 }
