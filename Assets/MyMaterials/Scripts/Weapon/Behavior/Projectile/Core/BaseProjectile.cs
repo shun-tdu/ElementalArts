@@ -52,7 +52,7 @@ namespace weapon.Behavior.Projectile.Core
         /// </summary>
         private void OnTriggerEnter(Collider other)
         {
-            Debug.Log($"衝突発生！ 相手: {other.gameObject.name}");
+            // Debug.Log($"衝突発生！ 相手: {other.gameObject.name}");
 
             //エレメント反応処理
             var reactable = other.GetComponent<IElementReactable>();

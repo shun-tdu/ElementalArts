@@ -1,9 +1,10 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using Cinemachine;
 
 using Cysharp.Threading.Tasks;
-
+using UnityEngine.InputSystem;
 using weapon;
 
 namespace Player
@@ -20,14 +21,6 @@ namespace Player
         
         [Header("Look")] 
         [SerializeField] public float lookSensitivity = 2f;
-
-        [Header("Aiming Reticle UI")] 
-        [SerializeField] private Image reticleImage;
-        [SerializeField] private Color reticleNormalColor;
-        [SerializeField] private Color reticleMainLockOnColor = Color.red;
-        [SerializeField] private Color reticleSubLockOnColor = Color.yellow;
-        [SerializeField] private float defaultAimDistance = 100f;
-        
         
         [Header("Input Control(Lock Axes)")] 
         public AxisState horizontalAim;
@@ -40,7 +33,6 @@ namespace Player
         /*========内部状態変数========*/
         //操作系入力値
         private Vector2 moveRawInput = Vector2.zero;
-        // private Vector2 lookInput = Vector2.zero;
 
         private bool isThrustUp = false;
         private bool isThrustDown = false;
@@ -54,6 +46,9 @@ namespace Player
         private LockOnManager lockOnManager;
         private Rigidbody rb;
         private Transform emitPoint;
+        
+        //ロックオン状態の外部参照
+        public InputAction LockOnAction => controls.Player.LockOn;
         
 
         private void Awake()
@@ -91,12 +86,8 @@ namespace Player
             controls.Player.Fire.canceled += _ => weapon.OnTriggerUp(emitPoint);
 
             //----LockOnとAim----
-            controls.Player.LockOn.performed += _ => lockOnManager.ToggleLockOn(this.transform);
-            // controls.Player.Aim.started += ctc => StartAimingSubTarget();
-            // controls.Player.Aim.canceled += ctc => StopAimingSubTarget();
+            // controls.Player.LockOn.performed += _ => lockOnManager.ToggleLockOn(this.transform);
 
-            // yaw = transform.eulerAngles.y;
-            // pitch = cameraPivot.localEulerAngles.x;
         }
 
         private void Start()
@@ -121,7 +112,7 @@ namespace Player
             HandleCursorLock();
             
             //レティクルの更新処理
-            UpdateReticle();
+            // UpdateReticle();
             
             //AxisStateの更新処理
             horizontalAim.Update(Time.deltaTime);
@@ -260,76 +251,7 @@ namespace Player
         }
         
 
-        /// <summary>
-        /// レティクル関連の処理
-        /// </summary>
-        private void UpdateReticle()
-        {
-            if (reticleImage == null || Camera.main == null) return;
-
-            //----サブロックオン状態(最優先)----
-            if (lockOnManager.IsAimingSubTarget &&  lockOnManager.SubLockOnTarget != null)
-            {
-                Vector3 screenPosition = Camera.main.WorldToScreenPoint(lockOnManager.SubLockOnTarget.position);
-
-                // ターゲットがカメラの前方にあり、かつ画面内にいるかチェック
-                if (screenPosition.z > 0 &&
-                    screenPosition.x > 0 && screenPosition.x < Screen.width &&
-                    screenPosition.y > 0 && screenPosition.y < Screen.height)
-                {
-                    reticleImage.enabled = true; // 表示する
-                    reticleImage.transform.position = screenPosition; // ターゲットに追従
-                    reticleImage.color = reticleSubLockOnColor; // サブロックオン用の色に
-                }
-                else
-                {
-                    reticleImage.enabled = false; // 画面外なら非表示
-                }
-            }
-            // --- 2. メインロックオン状態 ---
-            else if (lockOnManager.MainLockOnTarget != null)
-            {
-                Vector3 screenPosition = Camera.main.WorldToScreenPoint(lockOnManager.MainLockOnTarget.position);
-
-                if (screenPosition.z > 0 &&
-                    screenPosition.x > 0 && screenPosition.x < Screen.width &&
-                    screenPosition.y > 0 && screenPosition.y < Screen.height)
-                {
-                    reticleImage.enabled = true;
-                    reticleImage.transform.position = screenPosition; // ターゲットに追従
-                    reticleImage.color = reticleMainLockOnColor; // メインロックオン用の色に
-                }
-                else
-                {
-                    reticleImage.enabled = false;
-                }
-            }
-            // --- 3. フリー（非ロックオン）状態 ---
-            else
-            {
-                reticleImage.enabled = true;
-                reticleImage.color = reticleNormalColor; // 通常の色に
-
-                // レイをカメラの中心から正面に飛ばす
-                // Ray ray = new Ray(cameraPivot.position, cameraPivot.forward);
-                Ray ray = new Ray(camManager.EyeTransform.position,  camManager.EyeTransform.forward);   
-                Vector3 targetPoint;
-
-                // レイがロックオン対象レイヤーの何かに当たったら
-                if (Physics.Raycast(ray, out RaycastHit hit, float.MaxValue, lockOnManager.LockOnLayer))
-                {
-                    targetPoint = hit.point; // 当たった地点を照準のターゲットとする
-                }
-                else
-                {
-                    targetPoint = ray.GetPoint(defaultAimDistance); // 何にも当たらなかったら、遠方をターゲットとする
-                }
-
-                // 3Dのターゲット座標を2Dのスクリーン座標に変換してレティクルを移動
-                reticleImage.transform.position = Camera.main.WorldToScreenPoint(targetPoint);
-            }
-        }
-
+        
         /// <summary>
         /// カーソルの更新処理
         /// </summary>
