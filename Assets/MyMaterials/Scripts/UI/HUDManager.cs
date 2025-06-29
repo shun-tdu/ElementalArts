@@ -1,8 +1,6 @@
 ﻿using Player;
 using UnityEngine;
 using UnityEngine.UI;
-using Player;
-using Cysharp.Threading.Tasks;
 
 namespace UI
 {

@@ -130,7 +130,11 @@ namespace Player
                 dashHoldTime += Time.deltaTime;
                 if (dashHoldTime >= dashHoldThreshold)
                 {
-                    BeginDash();
+                    //移動入力があるときだけダッシュを開始
+                    if (moveRawInput.sqrMagnitude > 0.01f)
+                    {
+                        BeginDash();
+                    }
                 }
             }
             
@@ -147,8 +151,17 @@ namespace Player
             //ダッシュ処理
             if (isDashing && currentDashEnergy > 1f)
             {
-                DoDash();
-                ConsumeDashEnergy();
+                // 移動入力がなければダッシュを中断する
+                if (moveRawInput.sqrMagnitude < 0.01f)
+                {
+                    StopDash();
+                }
+                // 移動入力がある場合のみダッシュ処理を続ける
+                else
+                {
+                    DoDash();
+                    ConsumeDashEnergy();   
+                }
             }else if (!isDashing)
             {
                 RegenerateDashEnergy();
@@ -156,7 +169,7 @@ namespace Player
             
             //キャラクターの向きをカメラに合わせる処理
             HandleCharacterRotation();
-            
+
             if (controls.Player.Fire.IsPressed())
             {
                 weapon.OnTriggerHold(emitPoint);
@@ -279,7 +292,7 @@ namespace Player
 
         
         /// <summary>
-        /// ダッシュボタン押下処理
+        /// ダッシュボタン押下で呼び出される処理
         /// </summary>
         private void StartDashHold()
         {
@@ -289,7 +302,7 @@ namespace Player
         
         
         /// <summary>
-        /// ダッシュボタン押上処理
+        /// ダッシュボタン押上で呼び出される処理
         /// </summary>
         private void EndDashHold()
         {

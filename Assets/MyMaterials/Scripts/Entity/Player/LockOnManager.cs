@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Utility;
 using Cysharp.Threading.Tasks;
+using Singletons;
 
 namespace Player
 {
@@ -23,7 +24,7 @@ namespace Player
         [Header("Aiming Reticle UI")] 
         [SerializeField] private Image reticleImage;
         [SerializeField] private Color reticleNormalColor;
-        [SerializeField] private Color reticleMainLockOnColor = Color.red;
+        [SerializeField] private Color reticleLockOnColor;
 
         [Header("Lock-On")]
         [SerializeField] private float lockOnRange = 100f;  //ロックオン可能な最大距離
@@ -32,9 +33,18 @@ namespace Player
         [Header("Lock-On Box UI")]
         [SerializeField] private Image lockOnBoxUI;
         [SerializeField] private float reticleTransitionDuration = 0.2f;
+        [SerializeField] private Color lockOnBoxNormalColor;
+        [SerializeField] private Color lockOnBoxRockOnColor;
+
+        [Header("Aperture Setting")] 
+        [SerializeField] private Image apertureGaugeLeft;
+        [SerializeField] private Image apertureGaugeRight;
+        [SerializeField] private Image aperturePartHorizon;
+        [SerializeField] private Image aperturePartVertical;
 
         //ロックオン関連フィールド
         public Transform MainLockOnTarget { get; private set; }
+        public float MainTargetDistance { get; private set; } 
         public Transform SubLockOnTarget { get; private set; }
         public bool IsLockedOn { get; private set; } = false;
         
@@ -58,6 +68,13 @@ namespace Player
 
         private void Update()
         {
+            // メインターゲットとの距離を計算
+            if (MainLockOnTarget != null)
+            {
+                MainTargetDistance =
+                    Vector3.Distance(MainLockOnTarget.position, playerController.transform.position);
+            }
+            
             //Free → WeakLockへの遷移
             if (currentState == LockOnState.Free && MainLockOnTarget)
             {
@@ -65,14 +82,15 @@ namespace Player
             }
 
             //WeakLock → Freeへの遷移
-            if (currentState == LockOnState.Weak && !MainLockOnTarget)
+            if (currentState == LockOnState.Weak && !MainLockOnTarget || MainTargetDistance > lockOnRange)
             {
                 ChangeLockOnState(LockOnState.Free);
             }
 
             //Intention → Freeへの遷移
             if ((currentState == LockOnState.Intention && playerController.LockOnAction.triggered) ||
-                (currentState == LockOnState.Intention && !MainLockOnTarget))
+                (currentState == LockOnState.Intention && !MainLockOnTarget)||
+                (currentState == LockOnState.Intention && MainTargetDistance > lockOnRange))
             {
                 ChangeLockOnState(LockOnState.Free);
             }
@@ -127,8 +145,8 @@ namespace Player
                     //----小レティクルと大レティクルの有効化と通常色への変更----//
                     reticleImage.gameObject.SetActive(true);
                     reticleImage.color = reticleNormalColor;
-                    
                     lockOnBoxUI.gameObject.SetActive(true);
+                    lockOnBoxUI.color = lockOnBoxNormalColor;
                     
                     //----小レティクルを画面中央に戻す----//
                     MoveUIToCenterAsync(reticleImage, defaultPivotPosReticleImage, reticleTransitionDuration);
@@ -136,9 +154,14 @@ namespace Player
                     //----大レティクルを画面中央に戻す----//
                     MoveUIToCenterAsync(lockOnBoxUI, defaultPivotPosLockOnBoxUI, reticleTransitionDuration);
                     
+                    //----絞りゲージを初期化----//
+                    SetAperture(1f);
+                    
                     break;
 
                 case LockOnState.Weak:
+                    //----小レティクルのロックオン色への変更----//
+                    reticleImage.color = reticleLockOnColor;
                     break;
                 case LockOnState.Intention:
                     //----現在のロックオンを解除----//
@@ -147,6 +170,12 @@ namespace Player
                     //----画面の中心に最も近いものをMainTargetにする----//
                     SearchForTargetInBox();
                     
+                    //----大レティクル、小レティクルのロックオン色への変更----//
+                    reticleImage.color = reticleLockOnColor;
+                    lockOnBoxUI.color = lockOnBoxRockOnColor;
+                    
+                    //----SEの再生----//
+                    AudioManager.Instance.PlaySE(SoundType.IntentionLockOn);
                     break;
             }
         }
@@ -165,6 +194,7 @@ namespace Player
                 case LockOnState.Weak:
                     break;
                 case LockOnState.Intention:
+                    ClearLock();
                     break;
             }
         }
@@ -187,11 +217,15 @@ namespace Player
         {
             //大レティクル領域内にメインターゲットがいるかを確認
             CheckIfTargetIsOutOfBox();
-
+            
+            //メインターゲットが存在しなければreturn
             if (!MainLockOnTarget) return;
-
+            
             //小レティクルの移動処理
             Vector3 screenPosition = mainCamera.WorldToScreenPoint(MainLockOnTarget.position);
+            
+            //絞りゲージのアニメーション
+            SetAperture(1f - MainTargetDistance / lockOnRange);
 
             if (screenPosition.z > 0 &&
                 screenPosition.x > 0 && screenPosition.x < Screen.width &&
@@ -200,7 +234,7 @@ namespace Player
                 reticleImage.gameObject.SetActive(true);
                 lockOnBoxUI.gameObject.SetActive(true);
                 reticleImage.transform.position = screenPosition;
-                reticleImage.color = reticleMainLockOnColor;
+                reticleImage.color = reticleLockOnColor;
             }
             else
             {
@@ -219,6 +253,9 @@ namespace Player
             if(!MainLockOnTarget) return;
             Vector3 screenPosition = mainCamera.WorldToScreenPoint(MainLockOnTarget.position);
             
+            //絞りゲージのアニメーション
+            SetAperture(1f - MainTargetDistance / lockOnRange);
+            
             if (screenPosition.z > 0 &&
                 screenPosition.x > 0 && screenPosition.x < Screen.width &&
                 screenPosition.y > 0 && screenPosition.y < Screen.height)
@@ -226,7 +263,7 @@ namespace Player
                 //----小レティクルの追従処理----//
                 reticleImage.gameObject.SetActive(true);
                 reticleImage.transform.position = screenPosition;   
-                reticleImage.color = reticleMainLockOnColor;        
+                reticleImage.color = reticleLockOnColor;        
                 
                 //----大レティクルの追従処理----//
                 lockOnBoxUI.gameObject.SetActive(true);
@@ -333,6 +370,8 @@ namespace Player
                               MainLockOnTarget.gameObject.AddComponent<DestructionNotifier>();
             currentNotifier.OnDestroyed += OnTargetDestroyed;
             playerController.SetTarget(MainLockOnTarget);
+            
+            AudioManager.Instance.PlaySE(SoundType.TargetAcquired);
         }
 
         
@@ -405,6 +444,20 @@ namespace Player
             currentNotifier = null;
             MainLockOnTarget = null;
             playerController.SetTarget(null);
+        }
+
+    
+        /// <summary>
+        /// Apertureを指定した割合に即した表示にする
+        /// 入力は表示割合
+        /// </summary>
+        private void SetAperture(float amount)
+        {
+            float fillAmount = Mathf.Clamp(amount, 0f, 1f);
+            apertureGaugeLeft.fillAmount = Mathf.Clamp(amount, 0f, 1f);
+            apertureGaugeRight.fillAmount = Mathf.Clamp(amount, 0f, 1f);
+
+            aperturePartVertical.rectTransform.localEulerAngles = new Vector3(0f, 0f, (1 - amount) * 90f);
         }
     }
 }
