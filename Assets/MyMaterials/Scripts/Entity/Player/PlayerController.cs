@@ -6,6 +6,7 @@ using Cinemachine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.InputSystem;
 using weapon;
+using UI;
 
 namespace Player
 {
@@ -28,6 +29,7 @@ namespace Player
         [SerializeField] private float dashEnergyConsume = 10f;
         [SerializeField] private float dashEnergyRegeneration = 20f;
         [SerializeField] private float dashHoldThreshold = 0.2f;
+        [SerializeField] private float dashAccelTime = 1.0f;
         private float currentDashEnergy;
         private float dashHoldTime = 0f;
         private bool isDashing = false;
@@ -57,6 +59,7 @@ namespace Player
         private WeaponSystem weapon;
         private CameraManager camManager;
         private LockOnManager lockOnManager;
+        private HUDManager hudManager;
         private Rigidbody rb;
         private Transform emitPoint;
         
@@ -74,6 +77,7 @@ namespace Player
             weapon = GetComponent<WeaponSystem>();
             camManager = GetComponent<CameraManager>();
             lockOnManager = GetComponent<LockOnManager>();
+            hudManager = GameObject.Find("Canvas/InGameHUD").GetComponent<HUDManager>();
             
             //イベントの購読
             //----Movement----
@@ -141,7 +145,7 @@ namespace Player
             HandleMovement();
             
             //ダッシュ処理
-            if (isDashing && currentDashEnergy > dashEnergyConsume)
+            if (isDashing && currentDashEnergy > 1f)
             {
                 DoDash();
                 ConsumeDashEnergy();
@@ -316,10 +320,24 @@ namespace Player
         /// </summary>
         private void DoDash()
         {
-            var dir = new Vector3(moveRawInput.x, 0, moveRawInput.y);
-            if (dir.sqrMagnitude < 0.1f) dir = transform.forward;
-            dir = transform.TransformDirection(dir).normalized;
-            rb.velocity = dir * dashSpeed;
+            Vector3 moveDirection = transform.right * moveRawInput.x + transform.forward * moveRawInput.y;
+            Vector3 targetVel = new Vector3(moveDirection.x, 0, moveDirection.z) * dashSpeed;
+
+            Vector2 current2D = new Vector2(rb.velocity.x, rb.velocity.z);
+            Vector2 target2D = new Vector2(targetVel.x, targetVel.z);
+            bool isAccelerating = target2D.sqrMagnitude > current2D.sqrMagnitude;
+            float smoothTime = isAccelerating ? dashAccelTime : decelTime;
+            
+            //加減速に応じたsmoothTimeで加減速
+            // Vector3 smoothedVel = Vector3.SmoothDamp(
+            //     rb.velocity,
+            //     targetVel,
+            //     ref currentVelocity,
+            //     smoothTime
+            // );
+
+            Vector3 smoothedVel = Vector3.MoveTowards(rb.velocity, targetVel, dashSpeed * Time.deltaTime / smoothTime);
+            rb.velocity = smoothedVel;
         }
         
         
@@ -338,6 +356,7 @@ namespace Player
                 StopDash();
             }
             //todo エネルギーをUIに反映
+            hudManager.SetBoostEnergyValue(currentDashEnergy);
         }
         
         /// <summary>
@@ -355,6 +374,7 @@ namespace Player
                 currentDashEnergy = Mathf.Min(currentDashEnergy, dashEnergyMax);
 
                 //todo エネルギーをUIに反映
+                hudManager.SetBoostEnergyValue(currentDashEnergy);
             }
         }
         

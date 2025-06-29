@@ -24,7 +24,7 @@ namespace Player
         // Update is called once per frame
         void Update()
         {
-            float playerSpeed = playerRigidBody.velocity.magnitude / 45f + 0.6f;
+            float playerSpeed = playerRigidBody.velocity.magnitude / 30f + 0.2f;
             afterBurnerVFX.SetFloat(intensityProp,playerSpeed);
             afterBurnerVFX.SetFloat(speedProp,playerSpeed);
         }

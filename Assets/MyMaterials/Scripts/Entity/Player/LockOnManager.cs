@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Utility;
-
+using Cysharp.Threading.Tasks;
 
 namespace Player
 {
@@ -31,6 +31,7 @@ namespace Player
 
         [Header("Lock-On Box UI")]
         [SerializeField] private Image lockOnBoxUI;
+        [SerializeField] private float reticleTransitionDuration = 0.2f;
 
         //ロックオン関連フィールド
         public Transform MainLockOnTarget { get; private set; }
@@ -40,7 +41,9 @@ namespace Player
         private Camera mainCamera;
         private PlayerController playerController;
         private DestructionNotifier currentNotifier;
-
+        private Vector2 defaultPivotPosReticleImage;
+        private Vector2 defaultPivotPosLockOnBoxUI;
+        
         private LockOnState currentState = LockOnState.Free;
 
         
@@ -48,6 +51,8 @@ namespace Player
         {
             playerController = GetComponent<PlayerController>();
             mainCamera = Camera.main;
+            defaultPivotPosReticleImage = reticleImage.rectTransform.pivot;
+            defaultPivotPosLockOnBoxUI = lockOnBoxUI.rectTransform.pivot;
         }
         
 
@@ -111,6 +116,43 @@ namespace Player
 
         
         /// <summary>
+        /// LockOnStateのEnter処理
+        /// </summary>
+        /// <param name="state">現在のLockOnState</param>
+        void OnEnterLockOnState(LockOnState state)
+        {
+            switch (state)
+            {
+                case LockOnState.Free:
+                    //----小レティクルと大レティクルの有効化と通常色への変更----//
+                    reticleImage.gameObject.SetActive(true);
+                    reticleImage.color = reticleNormalColor;
+                    
+                    lockOnBoxUI.gameObject.SetActive(true);
+                    
+                    //----小レティクルを画面中央に戻す----//
+                    MoveUIToCenterAsync(reticleImage, defaultPivotPosReticleImage, reticleTransitionDuration);
+                    
+                    //----大レティクルを画面中央に戻す----//
+                    MoveUIToCenterAsync(lockOnBoxUI, defaultPivotPosLockOnBoxUI, reticleTransitionDuration);
+                    
+                    break;
+
+                case LockOnState.Weak:
+                    break;
+                case LockOnState.Intention:
+                    //----現在のロックオンを解除----//
+                    ClearLock();
+                    
+                    //----画面の中心に最も近いものをMainTargetにする----//
+                    SearchForTargetInBox();
+                    
+                    break;
+            }
+        }
+        
+        
+        /// <summary>
         /// LockOnStateのExit処理
         /// </summary>
         /// <param name="state">現在のLockOnState</param>
@@ -126,53 +168,7 @@ namespace Player
                     break;
             }
         }
-
         
-        /// <summary>
-        /// LockOnStateのEnter処理
-        /// </summary>
-        /// <param name="state">現在のLockOnState</param>
-        void OnEnterLockOnState(LockOnState state)
-        {
-            switch (state)
-            {
-                case LockOnState.Free:
-                    //----小レティクルと大レティクルの有効化と通常色への変更----//
-                    reticleImage.enabled = true;
-                    reticleImage.color = reticleNormalColor;
-
-                    lockOnBoxUI.enabled = true;
-                    
-                    //----小レティクルを画面中央に戻す----/
-                    // RectTransform reticleImageRectTransform = reticleImage.rectTransform;
-                    // reticleImageRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                    // reticleImageRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                    // reticleImageRectTransform.pivot = new Vector2(0.5f, 0.5f);
-                    // reticleImageRectTransform.anchoredPosition = Vector2.zero;
-                    ResetUIToCenter(reticleImage);
-                    
-                    //----大レティクルを画面中央に戻す----/
-                    // RectTransform lockOnBoxUIRectTransform = lockOnBoxUI.rectTransform;
-                    // lockOnBoxUIRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                    // lockOnBoxUIRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                    // lockOnBoxUIRectTransform.pivot = new Vector2(0.5f, 0.5f);
-                    // lockOnBoxUIRectTransform.anchoredPosition = Vector2.zero;
-                    ResetUIToCenter(lockOnBoxUI);
-                    break;
-
-                case LockOnState.Weak:
-                    //Todo 小レティクルと大レティクルの有効化
-                    break;
-                case LockOnState.Intention:
-                    //小レティクルと大レティクルの有効化
-                    //MainTargetの再計算
-                    //画面の中心に最も近いものをMainTargetにする
-                    SearchForTargetInBox();
-                    
-                    break;
-            }
-        }
-
 
         /// <summary>
         /// フリーロックオン状態のUpdate処理
@@ -201,13 +197,15 @@ namespace Player
                 screenPosition.x > 0 && screenPosition.x < Screen.width &&
                 screenPosition.y > 0 && screenPosition.y < Screen.height)
             {
-                reticleImage.enabled = true;                        //小レティクルの有効化
-                reticleImage.transform.position = screenPosition;   // ターゲットに追従
-                reticleImage.color = reticleMainLockOnColor;        // メインロックオン用の色に
+                reticleImage.gameObject.SetActive(true);
+                lockOnBoxUI.gameObject.SetActive(true);
+                reticleImage.transform.position = screenPosition;
+                reticleImage.color = reticleMainLockOnColor;
             }
             else
             {
-                reticleImage.enabled = false;                       //レティクルの無効化
+                reticleImage.gameObject.SetActive(false);
+                lockOnBoxUI.gameObject.SetActive(false);
             }
         }
 
@@ -226,18 +224,18 @@ namespace Player
                 screenPosition.y > 0 && screenPosition.y < Screen.height)
             {
                 //----小レティクルの追従処理----//
-                reticleImage.enabled = true;                        //小レティクルの有効化
-                reticleImage.transform.position = screenPosition;   // ターゲットに追従
-                reticleImage.color = reticleMainLockOnColor;        // メインロックオン用の色に
+                reticleImage.gameObject.SetActive(true);
+                reticleImage.transform.position = screenPosition;   
+                reticleImage.color = reticleMainLockOnColor;        
                 
                 //----大レティクルの追従処理----//
-                lockOnBoxUI.enabled = true;
+                lockOnBoxUI.gameObject.SetActive(true);
                 lockOnBoxUI.transform.position = screenPosition;
             }
             else
             {
-                reticleImage.enabled = false;                       //レティクルの無効化
-                lockOnBoxUI.enabled = false;
+                reticleImage.gameObject.SetActive(false);
+                lockOnBoxUI.gameObject.SetActive(false);
             }
         }
         
@@ -274,15 +272,20 @@ namespace Player
             }
         }
 
-
+        /// <summary>
+        /// ターゲットが大レティクル外にいるかを確認
+        /// 外側にいる場合はロックオン解除
+        /// </summary>
         private void CheckIfTargetIsOutOfBox()
         {
+            //MainLockOnTargetが消えるか、非アクティブのときもロックオン解除
             if (MainLockOnTarget == null || !MainLockOnTarget.gameObject.activeInHierarchy)
             {
                 ClearLock();
                 return;
             }
-
+            
+            //ターゲットが大レティクル外にいる場合もロックオン解除
             if (!IsTargetInLockOnZone(MainLockOnTarget))
             {
                 ClearLock();
@@ -348,15 +351,45 @@ namespace Player
             ClearLock();
         }
 
-        
+        /// <summary>
+        /// 指定されたUI要素を、時間をかけて画面中央へスムーズに移動させる
+        /// </summary>
+        /// <param name="img">移動させるImage</param>
+        /// <param name="defaultPivotPos">初期状態のPivot位置</param>
+        /// <param name="duration">移動にかける時間（秒）</param>
+        private async UniTaskVoid MoveUIToCenterAsync(Image img, Vector2 defaultPivotPos, float duration)
+        {
+            //移動開始時の位置を取得
+            Vector3 startPos = img.rectTransform.position;
+            //目標値計算
+            Vector3 endPos = new Vector3(Screen.width / 2f, Screen.height / 2f, 0);
+
+            float elapsedTime = 0f;
+            
+            while (elapsedTime < duration)
+            {
+                //経過時間に基づいて位置を線形補間
+                img.rectTransform.position = Vector3.Lerp(startPos, endPos, elapsedTime / duration);
+                
+                //時間を更新
+                elapsedTime += Time.deltaTime;
+                
+                //次フレームまで待機
+                await UniTask.Yield();
+            }
+            
+            ResetUIToCenter(img, defaultPivotPos);
+        }
+
         /// <summary>
         /// レティクルを初期化する
+        /// 徐々に中心に戻す
         /// </summary>
         /// <param name="img">初期化するImage</param>
-        private void ResetUIToCenter(Image img)
+        private void ResetUIToCenter(Image img, Vector2 anchorPos)
         {
             RectTransform rt = img.rectTransform;
-            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchorMin = rt.anchorMax = rt.pivot = anchorPos;
             rt.anchoredPosition = Vector2.zero;
         }
         
