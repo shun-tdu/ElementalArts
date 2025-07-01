@@ -237,8 +237,8 @@ MonoBehaviour:
   - type: 3
     clip: {fileID: 8300000, guid: 2e0c8b63fa6084d42aa3602348fcb51f, type: 3}
     volume: 1
-    fadeInTime: 0.3
-    fadeOutTime: 0.7
+    fadeInTime: 0.5
+    fadeOutTime: 1.1
 --- !u!82 &661676566
 AudioSource:
   m_ObjectHideFlags: 0
@@ -251,7 +251,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.2
+  m_Volume: 0.10657233
   m_Pitch: 1
   Loop: 0
   Mute: 0

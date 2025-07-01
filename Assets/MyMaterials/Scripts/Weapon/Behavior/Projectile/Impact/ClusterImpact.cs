@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace weapon.Behavior.Projectile.Impact
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Impact
 {
     [CreateAssetMenu(menuName = "Weapons/Behavior/Projectiles/Impact/Cluster")]
     public class ClusterImpact : ScriptableObject, IProjectileImpact

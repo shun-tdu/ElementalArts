@@ -6,12 +6,12 @@ using Cinemachine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.InputSystem;
 
-using weapon;
-using UI;
-using Player.Bit;
-using Singletons;
+using MyMaterials.Scripts.Weapon;
+using MyMaterials.Scripts.UI;
+using MyMaterials.Scripts.Entity.Player.Bit;
+using MyMaterials.Scripts.Singletons;
 
-namespace Player
+namespace MyMaterials.Scripts.Entity.Player
 {
     public enum BitFormationState
     {

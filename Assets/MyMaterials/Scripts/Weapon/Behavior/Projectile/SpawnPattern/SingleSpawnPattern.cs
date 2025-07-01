@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace weapon.Behavior.Projectile.SpawnPattern
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.SpawnPattern
 {
     [CreateAssetMenu(menuName = "Weapons/Behavior/Projectiles/Spawn Pattern/Single")]
     public class SingleSpawnPattern : ScriptableObject, ISpawnPattern

@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using UnityEngine;
-using weapon.Behavior.Projectile.Impact;
+using MyMaterials.Scripts.Weapon.Behavior.Projectile.Impact;
 
-namespace weapon.Behavior.Projectile.Core
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Core
 {
     public class HomingProjectile : BaseProjectile
     {

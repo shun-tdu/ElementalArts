@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Player
+namespace MyMaterials.Scripts.Entity.Player
 {
     public class PlayerHealth : MonoBehaviour, IDamageable
     {

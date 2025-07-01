@@ -2,7 +2,7 @@
 using UnityEngine;
 using Cinemachine;
 
-namespace Player
+namespace MyMaterials.Scripts.Entity.Player
 {
     public class CameraManager : MonoBehaviour
     {

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Element
+namespace MyMaterials.Scripts.Element
 {
     /// <summary>
     /// エレメントを持つEntityが持つインターフェイス

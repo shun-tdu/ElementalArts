@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace weapon.Behavior.Projectile.Movement
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Movement
 {
     // 飛び方を定義するインターフェイス
     public interface IProjectileMovement

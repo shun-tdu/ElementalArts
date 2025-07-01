@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-using weapon.Behavior.Projectile.Movement;
+using MyMaterials.Scripts.Weapon.Behavior.Projectile.Movement;
 
-namespace weapon.Behavior.Projectile.Movement
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Movement
 {
     [CreateAssetMenu(menuName = "Weapons/Behavior/Projectiles/Movement/Straight")]
     public class StraightMovement : ScriptableObject, IProjectileMovement

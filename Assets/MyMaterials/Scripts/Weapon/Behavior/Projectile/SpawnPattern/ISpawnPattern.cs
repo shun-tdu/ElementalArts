@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace weapon.Behavior.Projectile.SpawnPattern
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.SpawnPattern
 {
     /// <summary>
     /// 弾の発射パターンを定義するインターフェイス

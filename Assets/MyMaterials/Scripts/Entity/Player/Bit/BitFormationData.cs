@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 
-namespace Player.Bit
+namespace MyMaterials.Scripts.Entity.Player.Bit
 {
     /// <summary>
     /// 単一のビットの、親から見た相対的な位置と回転を定義する構造体

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.VFX;
 
 
-namespace weapon
+namespace MyMaterials.Scripts.Weapon
 {
     [CreateAssetMenu(menuName = "Weapons/Behavior/StylizedBeam")]
     public class StylizedBeamBehavior : WeaponBehavior

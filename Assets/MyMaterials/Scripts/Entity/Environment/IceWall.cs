@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System;
-using Element;
+using MyMaterials.Scripts.Element;
 
 namespace MyMaterials.Scripts.Entity.Environment
 {

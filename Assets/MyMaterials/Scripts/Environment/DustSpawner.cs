@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.VFX;
 
 
-namespace Environment
+namespace MyMaterials.Scripts.Environment
 {
     [RequireComponent(typeof(VisualEffect))]
     public class DustSpawner : MonoBehaviour

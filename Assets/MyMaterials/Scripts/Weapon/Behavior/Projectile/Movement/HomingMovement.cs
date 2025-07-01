@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
-using weapon.Behavior.Projectile.Core;
+using MyMaterials.Scripts.Weapon.Behavior.Projectile.Core;
+using MyMaterials.Scripts.Weapon.Behavior.Projectile.Impact;
 
-namespace weapon.Behavior.Projectile.Movement
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Movement
 {
     [CreateAssetMenu(menuName = "Weapons/Behavior/Projectiles/Movement/Homing")]
     public class HomingMovement : ScriptableObject, IProjectileMovement
@@ -11,7 +12,7 @@ namespace weapon.Behavior.Projectile.Movement
         [SerializeField] private string targetTag = "Enemy";
         // private Transform target;
 
-        public void Setup(Rigidbody rb, Impact.IProjectileImpact impact, Transform lockOnTarget)
+        public void Setup(Rigidbody rb, IProjectileImpact impact, Transform lockOnTarget)
         {
             Transform finalTarget;
 

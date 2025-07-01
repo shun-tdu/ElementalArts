@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Player.Bit
+namespace MyMaterials.Scripts.Entity.Player.Bit
 {
     public class BitFormationManager:MonoBehaviour
     {

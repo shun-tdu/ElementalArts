@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace weapon
+namespace MyMaterials.Scripts.Weapon
 {
     public　abstract class WeaponBehavior : ScriptableObject, IWeaponBehavior
     {

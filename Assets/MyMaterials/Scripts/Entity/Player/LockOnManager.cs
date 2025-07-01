@@ -3,10 +3,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using Cysharp.Threading.Tasks;
-using Utility;
-using Singletons;
+using MyMaterials.Scripts.Utility;
+using MyMaterials.Scripts.Singletons;
 
-namespace Player
+namespace MyMaterials.Scripts.Entity.Player
 {
     /// <summary>
     /// Playerのロックオンステート

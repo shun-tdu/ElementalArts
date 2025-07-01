@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.VFX;
 
-namespace Player.Bit
+namespace MyMaterials.Scripts.Entity.Player.Bit
 {
     public class BitController : MonoBehaviour
     {

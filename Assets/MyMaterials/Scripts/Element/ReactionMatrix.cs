@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Element
+namespace MyMaterials.Scripts.Element
 {
     /// <summary>
     /// エレメント反応のルールを持つクラス

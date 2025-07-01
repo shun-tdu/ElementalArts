@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.VFX;
 
-namespace Player
+namespace MyMaterials.Scripts.Entity.Player
 {
     public class AfterBurnerManager : MonoBehaviour
     {

@@ -1,9 +1,9 @@
 ﻿using System;
-using Player;
+using MyMaterials.Scripts.Entity.Player;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI
+namespace MyMaterials.Scripts.UI
 {
     public class HUDManager : MonoBehaviour
     {

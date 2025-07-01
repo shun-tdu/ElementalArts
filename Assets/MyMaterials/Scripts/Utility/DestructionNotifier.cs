@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Utility
+namespace MyMaterials.Scripts.Utility
 {
     public class DestructionNotifier:MonoBehaviour
     {

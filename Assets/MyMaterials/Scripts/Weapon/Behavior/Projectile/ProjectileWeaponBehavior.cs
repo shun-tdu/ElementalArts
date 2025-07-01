@@ -1,8 +1,8 @@
 ﻿using System;
 using UnityEngine;
-using weapon.Behavior.Projectile.Core;
+using MyMaterials.Scripts.Weapon.Behavior.Projectile.Core;
 
-namespace weapon.Behavior.Projectile
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile
 {
     [CreateAssetMenu(menuName = "Weapons/Behavior/Projectiles/ProjectileBehavior")]
     public class ProjectileWeaponBehavior : WeaponBehavior

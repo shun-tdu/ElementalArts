@@ -2051,7 +2051,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1608b1a9ef247d5ba418d51ec59f928, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerTransform: {fileID: 2632605664917425331}
   bitModels:
   - {fileID: 230991137}
   - {fileID: 600474677}

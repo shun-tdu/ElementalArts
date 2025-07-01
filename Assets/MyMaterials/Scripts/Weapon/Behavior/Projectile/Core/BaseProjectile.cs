@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
-using weapon.Behavior.Projectile.Impact;
-using Element;
+using MyMaterials.Scripts.Weapon.Behavior.Projectile.Impact;
+using MyMaterials.Scripts.Element;
 
 
-namespace weapon.Behavior.Projectile.Core
+namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Core
 {
     [RequireComponent(typeof(Rigidbody))]
     public class BaseProjectile : MonoBehaviour, IElementReactable

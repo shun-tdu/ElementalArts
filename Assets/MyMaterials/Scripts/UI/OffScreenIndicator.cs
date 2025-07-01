@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
-using Player;
+using MyMaterials.Scripts.Entity.Player;
 using UnityEngine.UI;
 
-namespace UI
+namespace MyMaterials.Scripts.UI
 {
     public class OffScreenIndicator : MonoBehaviour
     {

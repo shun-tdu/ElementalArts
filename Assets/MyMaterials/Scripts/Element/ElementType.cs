@@ -1,4 +1,4 @@
-﻿namespace Element
+﻿namespace MyMaterials.Scripts.Element
 {
     /// <summary>
     /// エレメントのタイプ

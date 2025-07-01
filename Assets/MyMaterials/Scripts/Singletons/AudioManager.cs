@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using Unity.VisualScripting;
 
-namespace Singletons
+namespace MyMaterials.Scripts.Singletons
 {
     public enum SoundType
     {

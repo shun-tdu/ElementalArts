@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace weapon
+namespace MyMaterials.Scripts.Weapon
 {
     public class WeaponSystem : MonoBehaviour
     {
