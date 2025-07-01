@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy : MonoBehaviour, IDamageble
+public class Enemy : MonoBehaviour, IDamageable
 {
     [SerializeField] private float enemyHp = 100.0f;
     [SerializeField] private GameObject explosionEffectPrefab;

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Utility;
+using UnityEngine.InputSystem;
 using Cysharp.Threading.Tasks;
+using Utility;
 using Singletons;
 
 namespace Player
@@ -45,7 +46,6 @@ namespace Player
         //ロックオン関連フィールド
         public Transform MainLockOnTarget { get; private set; }
         public float MainTargetDistance { get; private set; } 
-        public Transform SubLockOnTarget { get; private set; }
         public bool IsLockedOn { get; private set; } = false;
         
         private Camera mainCamera;
@@ -53,8 +53,9 @@ namespace Player
         private DestructionNotifier currentNotifier;
         private Vector2 defaultPivotPosReticleImage;
         private Vector2 defaultPivotPosLockOnBoxUI;
-        
         private LockOnState currentState = LockOnState.Free;
+        private List<Transform> targetsInZone = new List<Transform>();
+        private InputAction switchTargetAction;
 
         
         private void Awake()
@@ -63,8 +64,32 @@ namespace Player
             mainCamera = Camera.main;
             defaultPivotPosReticleImage = reticleImage.rectTransform.pivot;
             defaultPivotPosLockOnBoxUI = lockOnBoxUI.rectTransform.pivot;
+
+            if (playerController.LockOnAction != null)
+            {
+                switchTargetAction = playerController.LockOnAction.actionMap.asset.FindAction("SwitchTarget");
+            }
         }
-        
+
+
+        private void OnEnable()
+        {
+            if (switchTargetAction != null)
+            {
+                switchTargetAction.performed += OnSwitchTarget;
+                switchTargetAction.Enable();
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (switchTargetAction != null)
+            {
+                switchTargetAction.performed -= OnSwitchTarget;
+                switchTargetAction.Disable();
+            }
+        }
+
 
         private void Update()
         {
@@ -142,6 +167,8 @@ namespace Player
             switch (state)
             {
                 case LockOnState.Free:
+                    ClearLock();
+                    
                     //----小レティクルと大レティクルの有効化と通常色への変更----//
                     reticleImage.gameObject.SetActive(true);
                     reticleImage.color = reticleNormalColor;
@@ -168,7 +195,14 @@ namespace Player
                     ClearLock();
                     
                     //----画面の中心に最も近いものをMainTargetにする----//
-                    SearchForTargetInBox();
+                    // SearchForTargetInBox();
+                    UpdateTargetsInZone();
+
+                    Transform bestTarget = FindBestTargetInList();
+                    if (bestTarget != null)
+                    {
+                        LockOnTo(bestTarget);
+                    }
                     
                     //----大レティクル、小レティクルのロックオン色への変更----//
                     reticleImage.color = reticleLockOnColor;
@@ -192,6 +226,7 @@ namespace Player
                 case LockOnState.Free:
                     break;
                 case LockOnState.Weak:
+                    targetsInZone.Clear();
                     break;
                 case LockOnState.Intention:
                     ClearLock();
@@ -206,7 +241,13 @@ namespace Player
         private void HandleFree()
         {
             //レティクル領域内の敵を探索、敵がいればMainTargetに設定
-            SearchForTargetInBox();
+            // SearchForTargetInBox();
+            UpdateTargetsInZone();
+            Transform bestTarget = FindBestTargetInList();
+            if (bestTarget != null && !IsLockedOn)
+            {
+                LockOnTo(bestTarget);
+            }
         }
 
         
@@ -216,6 +257,7 @@ namespace Player
         private void HandleWeak()
         {
             //大レティクル領域内にメインターゲットがいるかを確認
+            UpdateTargetsInZone();
             CheckIfTargetIsOutOfBox();
             
             //メインターゲットが存在しなければreturn
@@ -425,10 +467,10 @@ namespace Player
         /// 徐々に中心に戻す
         /// </summary>
         /// <param name="img">初期化するImage</param>
-        private void ResetUIToCenter(Image img, Vector2 anchorPos)
+        private void ResetUIToCenter(Image img, Vector2 pivotPos)
         {
             RectTransform rt = img.rectTransform;
-            rt.anchorMin = rt.anchorMax = rt.pivot = anchorPos;
+            rt.anchorMin = rt.anchorMax = rt.pivot = pivotPos;
             rt.anchoredPosition = Vector2.zero;
         }
         
@@ -458,6 +500,85 @@ namespace Player
             apertureGaugeRight.fillAmount = Mathf.Clamp(amount, 0f, 1f);
 
             aperturePartVertical.rectTransform.localEulerAngles = new Vector3(0f, 0f, (1 - amount) * 90f);
+        }
+
+        /// <summary>
+        /// マウスホイールのスクロール入力を受け取った時の処理
+        /// </summary>
+        private void OnSwitchTarget(InputAction.CallbackContext context)
+        {
+            if(currentState != LockOnState.Weak||targetsInZone.Count <= 1) return;
+
+            float scrollValue = context.ReadValue<Vector2>().y;
+
+            if (scrollValue > 0.1f)
+            {
+                CycleTarget(1);
+            }else if (scrollValue < -0.1f)
+            {
+                CycleTarget(-1);
+            }
+        }
+
+        
+        /// <summary>
+        /// ターゲットリストを循環して次のターゲットに切り替える
+        /// </summary>
+        private void CycleTarget(int direction)
+        {
+            if(MainLockOnTarget == null) return;
+            
+            int currentIndex = targetsInZone.IndexOf(MainLockOnTarget);
+            if(currentIndex == -1) return;
+
+            int nextIndex = (currentIndex + direction + targetsInZone.Count) % targetsInZone.Count;
+            
+            ClearLock();
+            LockOnTo(targetsInZone[nextIndex]);
+        }
+
+        
+        /// <summary>
+        /// ロックオンボックス内にいるターゲットのリストを更新する
+        /// </summary>
+        private void UpdateTargetsInZone()
+        {
+            targetsInZone.Clear();
+            var potentialTargets = Physics.OverlapSphere(playerController.transform.position, lockOnRange, LockOnLayer);
+
+            foreach (var targetColider in potentialTargets)
+            {
+                if (IsTargetInLockOnZone(targetColider.transform))
+                {
+                    targetsInZone.Add(targetColider.transform);
+                }
+            }
+        }
+
+        /// <summary>
+        /// ターゲットリストの中から画面中央に最も近いものを見つける
+        /// </summary>
+        private Transform FindBestTargetInList()
+        {
+            Transform bestTarget = null;
+            float minScreenDistance = float.MaxValue;
+            Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
+
+            foreach (var target in targetsInZone)
+            {
+                Vector3 screenPoint = mainCamera.WorldToScreenPoint(target.position);
+                if (screenPoint.z > 0)
+                {
+                    float distance = Vector2.Distance(screenPoint, screenCenter);
+                    if (distance < minScreenDistance)
+                    {
+                        minScreenDistance = distance;
+                        bestTarget = target;
+                    }
+                }
+            }
+
+            return bestTarget;
         }
     }
 }

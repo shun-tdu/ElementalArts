@@ -214,12 +214,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bgmSource: {fileID: 661676567}
-  seSource: {fileID: 661676566}
+  loopingSeSource: {fileID: 661676566}
+  seSourcePrefab: {fileID: 5579753736206485558, guid: 0c920a2efbbf17c46b9668beccd67c77,
+    type: 3}
+  sePoolSize: 64
   seClips:
-  - type: 3
-    clip: {fileID: 8300000, guid: df28c25365e38c849859ddeaffbd7b53, type: 3}
-  - type: 4
+  - type: 5
     clip: {fileID: 8300000, guid: 99a552fc83ad821468146bef2a939aab, type: 3}
+    volume: 0.2
+    fadeInTime: 0
+    fadeOutTime: 0.1
+  - type: 4
+    clip: {fileID: 8300000, guid: df28c25365e38c849859ddeaffbd7b53, type: 3}
+    volume: 0.05
+    fadeInTime: 0
+    fadeOutTime: 0.1
+  - type: 0
+    clip: {fileID: 8300000, guid: ce9120403018f7e448d3a71c6831172f, type: 3}
+    volume: 1
+    fadeInTime: 0
+    fadeOutTime: 0.1
+  - type: 3
+    clip: {fileID: 8300000, guid: 2e0c8b63fa6084d42aa3602348fcb51f, type: 3}
+    volume: 1
+    fadeInTime: 0.3
+    fadeOutTime: 0.7
 --- !u!82 &661676566
 AudioSource:
   m_ObjectHideFlags: 0
@@ -538,6 +557,7 @@ GameObject:
   - component: {fileID: 1373664468}
   - component: {fileID: 1373664467}
   - component: {fileID: 1373664466}
+  - component: {fileID: 1373664469}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -611,3 +631,36 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1373664469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373664465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2

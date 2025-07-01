@@ -1,15 +1,36 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using Cinemachine;
 
 using Cysharp.Threading.Tasks;
 using UnityEngine.InputSystem;
+
 using weapon;
 using UI;
+using Player.Bit;
+using Singletons;
 
 namespace Player
 {
+    public enum BitFormationState
+    {
+        Idle,
+        Forward,
+        Backward,
+        Left,
+        Right,
+        Up,
+        Down
+    }
+    
+    [System.Serializable]
+    public class FormationMapping
+    {
+        public BitFormationState state;
+        public BitFormationData formationData;
+    }
+    
     [RequireComponent(typeof(Rigidbody))]
     public class PlayerController : MonoBehaviour
     {
@@ -42,6 +63,9 @@ namespace Player
         public AxisState horizontalAim;
         public AxisState verticalAim;
 
+        [Header("ビット制御 (Bit Control)")]
+        [SerializeField] private BitFormationManager bitManager; // BitFormationManagerへの参照
+        [SerializeField] private List<FormationMapping> formationMappings; // 状態と設計図のマッピングリスト
 
         
         /*========内部状態変数========*/
@@ -53,7 +77,14 @@ namespace Player
         private bool isFireSecondaryWeapon = false;
         private bool canStep = true;
         private Vector3 currentVelocity;
+        
+        //ビット制御系
+        private Dictionary<BitFormationState, BitFormationData> formationDictionary;
+        private BitFormationState currentBitState;
 
+        //SE制御系
+        private bool isEngineSoundPlaying = false;
+        
         //アタッチされているコンポーネントの内部参照
         private PlayerControls controls;
         private WeaponSystem weapon;
@@ -78,6 +109,12 @@ namespace Player
             camManager = GetComponent<CameraManager>();
             lockOnManager = GetComponent<LockOnManager>();
             hudManager = GameObject.Find("Canvas/InGameHUD").GetComponent<HUDManager>();
+
+            formationDictionary = new Dictionary<BitFormationState, BitFormationData>();
+            foreach (var mapping in formationMappings)
+            {
+                formationDictionary[mapping.state] = mapping.formationData;
+            }
             
             //イベントの購読
             //----Movement----
@@ -138,6 +175,9 @@ namespace Player
                 }
             }
             
+            //移動用ビットの更新処理
+            UpdateBitFormation();
+            
             //カーソル固定処理
             HandleCursorLock();
         }
@@ -175,6 +215,24 @@ namespace Player
                 weapon.OnTriggerHold(emitPoint);
                 weapon.SetLockOnTarget(lockOnManager.GetCurrentTarget());
             }
+            
+            //移動SE再生処理
+            if (moveRawInput.sqrMagnitude > 0.01f || isThrustUp || isThrustDown)
+            {
+                if (!isEngineSoundPlaying)
+                {
+                    AudioManager.Instance.PlayLoopingSE(SoundType.EngineHum);
+                    isEngineSoundPlaying = true;
+                }
+            }
+            else
+            {
+                if (isEngineSoundPlaying)
+                {
+                    AudioManager.Instance.StopLoopingSE();
+                    isEngineSoundPlaying = false;
+                }
+            }
         }
         
         
@@ -197,28 +255,6 @@ namespace Player
             var verticalRotation = Quaternion.AngleAxis(verticalAim.Value, Vector3.right);
             transform.rotation = horizontalRotation;
             camManager.EyeTransform.localRotation = verticalRotation;
-            
-            // if (isLockedOn && mainLockOnTarget != null)
-            // {
-            //     Vector3 directionToTarget = mainLockOnTarget.position - transform.position;
-            //     directionToTarget.y = 0;
-            //     if (directionToTarget.sqrMagnitude > 0.01f)
-            //     {
-            //         Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
-            //         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
-            //     }
-            // }
-            // else
-            // {
-            //     Transform camTransform = Camera.main.transform;
-            //     Vector3 camForward = camTransform.forward;
-            //     camForward.y = 0;
-            //
-            //     if (camForward.sqrMagnitude > 0.01)
-            //     {
-            //         transform.rotation = Quaternion.LookRotation(camForward);
-            //     }
-            // }
         }
         
 
@@ -227,7 +263,11 @@ namespace Player
         /// </summary>
         private void HandleMovement()
         {
-
+            // ----垂直スラスタ系----
+            if (isThrustUp) rb.AddForce(Vector3.up * thrustAccel, ForceMode.Acceleration);
+            if (isThrustDown) rb.AddForce(Vector3.down * thrustAccel, ForceMode.Acceleration);
+            
+            // ----水平移動----
             Vector3 moveDirection= transform.right * moveRawInput.x + transform.forward * moveRawInput.y;
             
             //目標速度計算
@@ -240,17 +280,14 @@ namespace Player
             float smoothTime = isAccelerating ? accelTime : decelTime;
             
             //加減速に応じたsmoothTimeで加減速
-            Vector3 smoothedVel = Vector3.SmoothDamp(
-                rb.velocity,
+            Vector3 smoothedHorizontalVel = Vector3.SmoothDamp(
+                new Vector3(rb.velocity.x,0,rb.velocity.z),
                 targetVel,
                 ref currentVelocity,
                 smoothTime
                 );
-            rb.velocity = smoothedVel;
-            
-            //垂直スラスタ系
-            if (isThrustUp) rb.AddForce(Vector3.up * thrustAccel, ForceMode.Acceleration);
-            if (isThrustDown) rb.AddForce(Vector3.down * thrustAccel, ForceMode.Acceleration);
+
+            rb.velocity = new Vector3(smoothedHorizontalVel.x, rb.velocity.y, smoothedHorizontalVel.z);
         }
         
         
@@ -284,6 +321,8 @@ namespace Player
             rb.AddForce(dir * stepForce,ForceMode.Impulse);
             
             // TODO 無敵処理など
+            //SE再生
+            AudioManager.Instance.PlaySE(SoundType.Step);
 
             await UniTask.Delay((int)(stepCoolDown * 1000));
 
@@ -388,6 +427,45 @@ namespace Player
 
                 //todo エネルギーをUIに反映
                 hudManager.SetBoostEnergyValue(currentDashEnergy);
+            }
+        }
+        
+        /// <summary>
+        /// 現在の入力からビットのフォーメーション状態を決定し、BitFormationManagerに伝える
+        /// </summary>
+        private void UpdateBitFormation()
+        {
+            BitFormationState newState = DetermineBitState();
+
+            if (newState != currentBitState)
+            {
+                currentBitState = newState;
+                if (formationDictionary.TryGetValue(currentBitState, out BitFormationData data))
+                {
+                    bitManager.SetTargetFormation(data);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 現在の入力値から、どの状態であるべきかを判断する
+        /// </summary>
+        private BitFormationState DetermineBitState()
+        {
+            if (isThrustUp) return BitFormationState.Up;
+            if (isThrustDown) return BitFormationState.Down;
+
+            if (moveRawInput.sqrMagnitude < 0.01f)
+            {
+                return BitFormationState.Idle;
+            }
+
+            if (Mathf.Abs(moveRawInput.x) > Mathf.Abs(moveRawInput.y))
+            {
+                return moveRawInput.x > 0 ? BitFormationState.Right : BitFormationState.Left;
+            }else
+            {
+                return moveRawInput.y > 0 ? BitFormationState.Forward : BitFormationState.Backward;
             }
         }
         

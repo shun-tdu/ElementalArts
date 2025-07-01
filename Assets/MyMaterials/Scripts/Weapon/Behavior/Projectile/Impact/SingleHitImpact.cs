@@ -9,7 +9,7 @@ namespace weapon.Behavior.Projectile.Impact
 
         public void OnImpact(Transform projectile, Collider hit)
         {
-            var damageble = hit.GetComponent<IDamageble>();
+            var damageble = hit.GetComponent<IDamageable>();
             if (damageble != null)
             {
                 Vector3 hitDirection = projectile.forward;

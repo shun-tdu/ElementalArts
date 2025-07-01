@@ -79,7 +79,7 @@ namespace weapon
                 }
             
                 //ダメージ処理
-                var damageble = hit.collider.GetComponent<IDamageble>();
+                var damageble = hit.collider.GetComponent<IDamageable>();
                 if (damageble != null)
                 {
                     Vector3 hitPoint = hit.point;

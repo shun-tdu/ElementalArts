@@ -1,4 +1,5 @@
-﻿using Player;
+﻿using System;
+using Player;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +13,7 @@ namespace UI
 
         [Header("SliderReferences")]
         [SerializeField] private Slider boosSlider;
-        [SerializeField] private Slider hitPointSlider;
+        [SerializeField] private Slider healthSlider;
         
         // [Header("Reticle Settings")]
         // [SerializeField] private Color reticleNormalColor = Color.white;
@@ -31,9 +32,25 @@ namespace UI
         private LockOnManager lockOnManager;
         private Camera mainCamera;
         
+        /*----イベント購読対象の参照----*/
+        private PlayerHealth playerHealth;
         
-        private void Awake()
+        private void Start()
         {
+            playerHealth = FindObjectOfType<PlayerHealth>();
+
+            if (playerHealth != null)
+            {
+                // PlayerHealthのHP更新イベント購読とHPゲージの初期化
+                playerHealth.OnHealthChanged += UpdateHealthUI;
+
+                UpdateHealthUI(playerHealth.CurrentHealth, playerHealth.MaxHealth);
+            }
+            else
+            {
+                Debug.LogWarning("HUDManager: シーン内にPlayerHealthが見つかりませんでした。");
+            }
+            
             if (boosSlider != null)
             {
                 boosSlider.maxValue = boostEnergyMax;
@@ -41,6 +58,23 @@ namespace UI
             }
 
             SetBoostEnergyValue(boostEnergyMax);
+        }
+
+        private void OnDestroy()
+        {
+            if (playerHealth != null)
+            {
+                playerHealth.OnHealthChanged -= UpdateHealthUI;
+            }
+        }
+
+        private void UpdateHealthUI(float currentHealth, float maxHealth)
+        {
+            if (healthSlider != null)
+            {
+                healthSlider.maxValue = maxHealth;
+                healthSlider.value = currentHealth;
+            }
         }
 
         public void SetBoostEnergyValue(float newValue)

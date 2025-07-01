@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public interface IDamageble
+public interface IDamageable
 {
     /// <summary>
     /// ダメージを受け取る処理

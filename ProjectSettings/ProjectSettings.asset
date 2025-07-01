@@ -898,11 +898,11 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: 
+  cloudProjectId: 0d0d28c9-7da1-48d5-983d-81354e90444b
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: 
-  organizationId: 
+  projectName: HackAndDigURP
+  organizationId: shun1129
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   playerDataPath: 
