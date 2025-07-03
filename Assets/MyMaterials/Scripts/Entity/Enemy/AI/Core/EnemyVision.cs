@@ -1,15 +1,19 @@
 ﻿using System;
 using UnityEngine;
 
-namespace MyMaterials.Scripts.Entity.Enemy.AI.Controls
+namespace MyMaterials.Scripts.Entity.Enemy.AI.Core
 {
     public class EnemyVision : MonoBehaviour
     {
         [Header("視野の設定")] 
         [SerializeField, Range(0, 360)] private float viewAngle = 90f;
-        [SerializeField] private float viewRadius = 40f;
+        [SerializeField] private float viewRadius = 100f;
         [SerializeField] private LayerMask targetMask;
         [SerializeField] private LayerMask obstacleMask;
+        
+        // ---- プロパティ ----
+        public Transform PlayerTarget { get; set; }
+
 
         /// <summary>
         /// 視野範囲内にプレイヤーがいるかを確認する

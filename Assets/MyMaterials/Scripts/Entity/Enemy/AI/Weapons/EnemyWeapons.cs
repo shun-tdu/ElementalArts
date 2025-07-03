@@ -2,6 +2,7 @@
 using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using MyMaterials.Scripts.Singletons;
 
 namespace MyMaterials.Scripts.Entity.Enemy.AI.Weapons
 {
@@ -56,6 +57,7 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Weapons
             if (bulletRb != null)
             {
                 bulletRb.AddForce(firePoint.forward * fireForce, ForceMode.Impulse);
+                AudioManager.Instance.PlaySE(SoundType.BeamGun_1);
             }
         }
     }

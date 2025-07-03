@@ -18,6 +18,10 @@ namespace MyMaterials.Scripts.Singletons
         TargetAcquired,
         IntentionLockOn,
         TargetLost,
+        //Weapon
+        BeamGun_1,
+        Explosion_1,
+        HitEffect_1,
         //UI
         UIClick,
     }

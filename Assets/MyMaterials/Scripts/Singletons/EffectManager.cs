@@ -13,9 +13,11 @@ namespace MyMaterials.Scripts.Singletons
     {
         // Muzzle Flash
         Laser,
-
         // HitEffect
-        Explode,
+        HitEffect_1,
+        
+        // Explosion
+        Explosion_1,
     }
 
     public class EffectManager : MonoBehaviour

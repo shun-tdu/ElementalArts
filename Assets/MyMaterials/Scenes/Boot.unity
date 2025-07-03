@@ -217,7 +217,7 @@ MonoBehaviour:
   loopingSeSource: {fileID: 661676566}
   seSourcePrefab: {fileID: 5579753736206485558, guid: 0c920a2efbbf17c46b9668beccd67c77,
     type: 3}
-  sePoolSize: 64
+  sePoolSize: 512
   seClips:
   - type: 5
     clip: {fileID: 8300000, guid: 99a552fc83ad821468146bef2a939aab, type: 3}
@@ -239,6 +239,21 @@ MonoBehaviour:
     volume: 1
     fadeInTime: 0.5
     fadeOutTime: 1.1
+  - type: 7
+    clip: {fileID: 8300000, guid: a58ffb7176dc50e488c8a6830e3bb4dc, type: 3}
+    volume: 0.02
+    fadeInTime: 0
+    fadeOutTime: 0.1
+  - type: 8
+    clip: {fileID: 8300000, guid: 6ddb46539061e8c44946fc8cfc5aee36, type: 3}
+    volume: 0.2
+    fadeInTime: 0
+    fadeOutTime: 0.4
+  - type: 9
+    clip: {fileID: 8300000, guid: 5d8ef3faf43f43d4f8f241c360104b35, type: 3}
+    volume: 0.03
+    fadeInTime: 0
+    fadeOutTime: 0.1
 --- !u!82 &661676566
 AudioSource:
   m_ObjectHideFlags: 0
@@ -251,7 +266,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.10657233
+  m_Volume: 0.012517095
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -431,6 +446,59 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!1 &924444755
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 924444756}
+  - component: {fileID: 924444757}
+  m_Layer: 0
+  m_Name: EffectManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &924444756
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 924444755}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 10.1, z: 38.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &924444757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 924444755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40da7c2e41524b4d9ea5dc3d4ce63918, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  effectPoolSize: 64
+  effectInformations:
+  - type: 1
+    prefab: {fileID: 1981572952473662724, guid: 203611db36a6d8b46ba6f0437188e75b,
+      type: 3}
+    duration: 1
+  - type: 2
+    prefab: {fileID: 578350719197847823, guid: 7d616a330a119eb4fbda273c359f69b8, type: 3}
+    duration: 1
 --- !u!1 &973455563
 GameObject:
   m_ObjectHideFlags: 0

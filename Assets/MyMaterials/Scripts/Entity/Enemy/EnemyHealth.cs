@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using MyMaterials.Scripts.Singletons;
 
 namespace MyMaterials.Scripts.Entity.Enemy
 {
@@ -24,9 +25,9 @@ namespace MyMaterials.Scripts.Entity.Enemy
             CurrentHealth -= damage;
             
             // ここで被弾エフェクトをhitPositionに出したり、被弾音を鳴らしたりする
-            // EffectManager.Instance.PlayHitEffect(hitPosition);
-            // AudioManager.Instance.PlaySEAtPoint(SoundType.EnemyHit, hitPosition);
-
+            EffectManager.Instance.PlayEffect(EffectType.HitEffect_1, transform.position, Quaternion.identity);
+            AudioManager.Instance.PlaySE(SoundType.HitEffect_1);
+            
 
             if (CurrentHealth <= 0)
             {
@@ -41,7 +42,8 @@ namespace MyMaterials.Scripts.Entity.Enemy
             OnDeath?.Invoke();
             
             // ここで死亡エフェクトを再生したり、アイテムをドロップしたりする
-            // EffectManager.Instance.PlayExplosionEffect(transform.position);
+            EffectManager.Instance.PlayEffect(EffectType.Explosion_1, transform.position, Quaternion.identity);
+            AudioManager.Instance.PlaySE(SoundType.Explosion_1);
 
             Destroy(gameObject);
         }
