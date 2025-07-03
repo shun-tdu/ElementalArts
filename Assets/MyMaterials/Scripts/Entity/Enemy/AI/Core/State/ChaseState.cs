@@ -29,8 +29,6 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Core.State
         {
             //プレイヤーが視野範囲にいなければなにもしない
             if(enemy.Vision.PlayerTarget == null) return;
-
-            // var movement = enemy.GetComponent<EnemyMovement>();
             
             // プレイヤーを追いかける処理
             movement?.MoveTowards(enemy.Vision.PlayerTarget.position);

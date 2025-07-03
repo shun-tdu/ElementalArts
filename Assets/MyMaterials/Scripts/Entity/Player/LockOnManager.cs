@@ -3,11 +3,20 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using Cysharp.Threading.Tasks;
+using MyMaterials.Scripts.Entity.Enemy;
 using MyMaterials.Scripts.Utility;
 using MyMaterials.Scripts.Singletons;
 
 namespace MyMaterials.Scripts.Entity.Player
 {
+    public enum ReticleGauge
+    {
+        Top,    // レティクル上ゲージ
+        Left,   // レティクル左ゲージ
+        Right  // レティクル右ゲージ
+    }
+    
+    
     /// <summary>
     /// Playerのロックオンステート
     /// Free:未ロックオン
@@ -42,6 +51,11 @@ namespace MyMaterials.Scripts.Entity.Player
         [SerializeField] private Image apertureGaugeRight;
         [SerializeField] private Image aperturePartHorizon;
         [SerializeField] private Image aperturePartVertical;
+
+        [Header("Gauge Setting")]
+        [SerializeField] private Image gaugeTop;
+        [SerializeField] private Image gaugeLeft;
+        [SerializeField] private Image gaugeRight;
 
         //ロックオン関連フィールド
         public Transform MainLockOnTarget { get; private set; }
@@ -143,8 +157,8 @@ namespace MyMaterials.Scripts.Entity.Player
                     break;
             }
         }
-
-
+        
+        
         /// <summary>
         /// LockOnStateを遷移させる関数
         /// Exit,Enter処理をしているので、必ずこの関数経由で状態を遷移させること
@@ -183,6 +197,9 @@ namespace MyMaterials.Scripts.Entity.Player
                     
                     //----絞りゲージを初期化----//
                     SetAperture(1f);
+                    
+                    //----上ゲージを初期化----//
+                    SetGauge(1f, gaugeTop);
                     
                     break;
 
@@ -256,17 +273,17 @@ namespace MyMaterials.Scripts.Entity.Player
         /// </summary>
         private void HandleWeak()
         {
-            //大レティクル領域内にメインターゲットがいるかを確認
+            // 大レティクル領域内にメインターゲットがいるかを確認
             UpdateTargetsInZone();
             CheckIfTargetIsOutOfBox();
             
-            //メインターゲットが存在しなければreturn
+            // メインターゲットが存在しなければreturn
             if (!MainLockOnTarget) return;
             
-            //小レティクルの移動処理
+            // 小レティクルの移動処理
             Vector3 screenPosition = mainCamera.WorldToScreenPoint(MainLockOnTarget.position);
             
-            //絞りゲージのアニメーション
+            // 絞りゲージのアニメーション
             SetAperture(1f - MainTargetDistance / lockOnRange);
 
             if (screenPosition.z > 0 &&
@@ -297,6 +314,12 @@ namespace MyMaterials.Scripts.Entity.Player
             
             //絞りゲージのアニメーション
             SetAperture(1f - MainTargetDistance / lockOnRange);
+            
+            // レティクルの上ゲージにターゲットのHPを表示
+            if (MainLockOnTarget.TryGetComponent<EnemyHealth>(out var enemyHealth))
+            {
+                SetGauge(enemyHealth.CurrentHealth / enemyHealth.MaxHealth, gaugeTop);
+            }
             
             if (screenPosition.z > 0 &&
                 screenPosition.x > 0 && screenPosition.x < Screen.width &&
@@ -375,8 +398,6 @@ namespace MyMaterials.Scripts.Entity.Player
         /// <summary>
         /// ターゲットがレティクル領域内に存在するか確認
         /// </summary>
-        /// <param name="target"></param>
-        /// <returns></returns>
         private bool IsTargetInLockOnZone(Transform target)
         {
             if (lockOnBoxUI == null || mainCamera == null) return false;
@@ -440,6 +461,8 @@ namespace MyMaterials.Scripts.Entity.Player
         /// <param name="duration">移動にかける時間（秒）</param>
         private async UniTaskVoid MoveUIToCenterAsync(Image img, Vector2 defaultPivotPos, float duration)
         {
+            var token = img.GetCancellationTokenOnDestroy();
+            
             //移動開始時の位置を取得
             Vector3 startPos = img.rectTransform.position;
             //目標値計算
@@ -456,9 +479,10 @@ namespace MyMaterials.Scripts.Entity.Player
                 elapsedTime += Time.deltaTime;
                 
                 //次フレームまで待機
-                await UniTask.Yield();
+                await UniTask.Yield(cancellationToken: token);
             }
             
+            if(token.IsCancellationRequested) return;
             ResetUIToCenter(img, defaultPivotPos);
         }
 
@@ -501,7 +525,28 @@ namespace MyMaterials.Scripts.Entity.Player
 
             aperturePartVertical.rectTransform.localEulerAngles = new Vector3(0f, 0f, (1 - amount) * 90f);
         }
-
+        
+        /// <summary>
+        /// レティクルの指定したゲージを指定した割合に設定する
+        /// </summary>
+        private void SetGauge(float amount, Image reticlegauge)
+        {
+            amount = Mathf.Clamp(amount, 0f, 1f);
+            reticlegauge.fillAmount = amount;
+            // switch (reticleGauge)
+            // {
+            //     case ReticleGauge.Top:
+            //         gaugeTop.fillAmount = amount;
+            //         break;
+            //     case ReticleGauge.Left:
+            //         gaugeLeft.fillAmount = amount;
+            //         break;
+            //     case ReticleGauge.Right:
+            //         gaugeRight.fillAmount = amount;
+            //         break;
+            // }
+        }
+        
         /// <summary>
         /// マウスホイールのスクロール入力を受け取った時の処理
         /// </summary>

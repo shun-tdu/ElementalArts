@@ -8,7 +8,13 @@ namespace MyMaterials.Scripts.Entity.Enemy
     {
         [Header("HP設定")] 
         [SerializeField] private float maxHealth = 300f;
-        
+
+        public float MaxHealth
+        {
+            get => maxHealth;
+            private set => maxHealth = value;
+        } 
+
         public float CurrentHealth { get; private set; }
 
         public event Action OnDeath;

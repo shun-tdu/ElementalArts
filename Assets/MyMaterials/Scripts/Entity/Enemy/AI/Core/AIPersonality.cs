@@ -8,6 +8,7 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Core
     {
         [Header("AIの基本パラメータ")] 
         public float visionRange = 50f;
+        public float longRangeAttackRange = 300f;
         public float attackRange = 5;
         
         [Header("遷移ルール(上が優先)")]
