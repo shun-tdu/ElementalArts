@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using MyMaterials.Scripts.Singletons;
 using MyMaterials.Scripts.Weapon.Behavior.Projectile;
 using UnityEngine;
 
@@ -15,10 +16,12 @@ namespace MyMaterials.Scripts.Weapon
         private Transform currentTarget;
         public float CurrentAmmo { get; private set; }
         public bool IsReloading { get; private set; } = false;
+        public float CurrentReloadProgress { get; private set; }
         
         // ---- UI通知用のイベント ----
         public event Action<float, float> OnAmmoChanged;    // 残弾数変化を通知
-        public event Action<bool> OnReloadStatsChanged; // リロード状態変化を通知
+        public event Action<bool> OnReloadStatusChanged;     // リロード状態変化を通知
+        public event Action<float> OnReloadProgress;       // リロード進捗を通知するイベント
 
 
         private void Start()
@@ -94,23 +97,61 @@ namespace MyMaterials.Scripts.Weapon
             }
         }
         
+        
+        /// <summary>
+        /// 現在の武器の最大弾薬/エネルギー量を取得するヘルパー関数
+        /// </summary>
+        public float GetMaxAmmo()
+        {
+            if (behavior is IMagazineWeapon magazineWeapon)
+            {
+                return magazineWeapon.MagazineSize;
+            }
+
+            if (behavior is IChargeWeapon chargeWeapon)
+            {
+                return chargeWeapon.MaxCharge;
+            }
+
+            return 0;
+        }
+        
+        
         /// <summary>
         /// 指定した時間でリロードを処理を完了する非同期関数
         /// </summary>
         /// <param name="duration"></param>
         private async UniTaskVoid ReloadAsync(float duration)
         {
-            Debug.Log("リロード開始...");
             IsReloading = true;
+            OnReloadStatusChanged?.Invoke(true); //リロード開始を通知
             
-            // UIにリロード開始を通知
-            OnReloadStatsChanged?.Invoke(true); 
+            AudioManager.Instance.PlaySE(SoundType.RechargeWeapon_1);
 
-            await UniTask.Delay(TimeSpan.FromSeconds(duration),
-                cancellationToken: this.GetCancellationTokenOnDestroy());
+            float elapsedTime = 0f;
+            var token = this.GetCancellationTokenOnDestroy();
             
-            // 弾を装填
-            Reload(false);
+            // duration秒かけて、進捗を通知し続ける
+            while (elapsedTime < duration)
+            {
+                CurrentReloadProgress  = elapsedTime / duration;
+                OnReloadProgress?.Invoke(CurrentReloadProgress);
+
+                elapsedTime += Time.deltaTime;
+                await UniTask.Yield(cancellationToken: token);
+            }
+
+            // ループがキャンセルされずに終了した場合、リロードを完了させる
+            if (!token.IsCancellationRequested)
+            {
+                Reload(false);    
+            }
+            else
+            {
+                IsReloading = false;
+                CurrentReloadProgress = 0f;
+                OnReloadStatusChanged?.Invoke(false);
+            }
         }
         
         
@@ -124,33 +165,15 @@ namespace MyMaterials.Scripts.Weapon
             float maxAmmo = GetMaxAmmo();
             CurrentAmmo = maxAmmo;
             IsReloading = false;
-
+            CurrentReloadProgress = 0f;
+            
             if (!isInitial) 
             {
-                OnReloadStatsChanged?.Invoke(false);
+                OnReloadStatusChanged?.Invoke(false);
             }
             
             OnAmmoChanged?.Invoke(CurrentAmmo, maxAmmo); 
             Debug.Log("リロード完了");
-        }
-
-        
-        /// <summary>
-        /// 現在の武器の最大弾薬/エネルギー量を取得するヘルパー関数
-        /// </summary>
-        private float GetMaxAmmo()
-        {
-            if (behavior is IMagazineWeapon magazineWeapon)
-            {
-                return magazineWeapon.MagazineSize;
-            }
-
-            if (behavior is IChargeWeapon chargeWeapon)
-            {
-                return chargeWeapon.MaxCharge;
-            }
-
-            return 0;
         }
     }
 }

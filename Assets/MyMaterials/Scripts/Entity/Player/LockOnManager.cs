@@ -69,20 +69,7 @@ namespace MyMaterials.Scripts.Entity.Player
                     switchTargetAction.Enable();
                 }
             }
-            // if (playerController.LockOnAction != null)
-            // {
-            //     switchTargetAction = playerController.LockOnAction.actionMap.asset.FindAction("SwitchTarget");
-            // }
         }
-
-        // private void OnEnable()
-        // {
-        //     if (switchTargetAction != null)
-        //     {
-        //         switchTargetAction.performed += OnSwitchTarget;
-        //         switchTargetAction.Enable();
-        //     }
-        // }
 
         private void OnDisable()
         {
@@ -237,39 +224,7 @@ namespace MyMaterials.Scripts.Entity.Player
             // UIにターゲット喪失を通知
             OnTargetLost?.Invoke();
         }
-
         
-        // /// <summary>
-        // /// レティクル領域内の最も近いターゲットを取得
-        // /// ロックオン処理を行う
-        // /// </summary>
-        // private void SearchForTargetInBox()
-        // {
-        //     var potentialTargets = Physics.OverlapSphere(transform.position, LockOnRange, LockOnLayer);
-        //
-        //     Transform bestTarget = null;
-        //     float minScreenDistace = float.MaxValue;
-        //     Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
-        //
-        //     foreach (var targetCollider in potentialTargets)
-        //     {
-        //         if (IsTargetInLockOnZone(targetCollider.transform))
-        //         {
-        //             Vector3 screenPoint = mainCamera.WorldToScreenPoint(targetCollider.transform.position);
-        //             float distance = Vector2.Distance(screenPoint, screenCenter);
-        //             if (distance < minScreenDistace)
-        //             {
-        //                 minScreenDistace = distance;
-        //                 bestTarget = targetCollider.transform;
-        //             }
-        //         }
-        //     }
-        //
-        //     if (bestTarget != null)
-        //     {
-        //         LockOnTo(bestTarget);
-        //     }
-        // }
 
         /// <summary>
         /// ターゲットが大レティクル外にいるかを確認
@@ -383,6 +338,7 @@ namespace MyMaterials.Scripts.Entity.Player
             }
         }
 
+        
         /// <summary>
         /// ターゲットリストの中から画面中央に最も近いものを見つける
         /// </summary>

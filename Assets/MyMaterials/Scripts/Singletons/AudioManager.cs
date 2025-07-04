@@ -20,8 +20,10 @@ namespace MyMaterials.Scripts.Singletons
         TargetLost,
         //Weapon
         BeamGun_1,
+        BeamGun_2,
         Explosion_1,
         HitEffect_1,
+        RechargeWeapon_1,
         //UI
         UIClick,
     }

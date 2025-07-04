@@ -17,9 +17,12 @@ MonoBehaviour:
   shootInterval: 0.2
   lifeTime: 10
   initialSpeed: 50
+  magazineSize: 30
+  reloadTime: 3
   spawnPattern:
     _reference: {fileID: 11400000, guid: f50672dc26ff8954399af7987897bb99, type: 2}
   movement:
     _reference: {fileID: 11400000, guid: e6ae9baef19adf345a390f75eb3e1bc4, type: 2}
   impact:
     _reference: {fileID: 11400000, guid: 6a59a4a64db0b0443a048ba75bd7619d, type: 2}
+  fireSound: 8

@@ -58,15 +58,13 @@ namespace MyMaterials.Scripts.Entity.Player
         
         [Header("Look")] 
         [SerializeField] public float lookSensitivity = 2f;
-
-
+        
         [Header("武装 (Armaments)")] 
         [Tooltip("装備する武器スロットのリスト。最大4つまでを想定")]
         [SerializeField] private List<WeaponSystem> weaponSlots;    //複数の武器スロットを管理するリスト
         private int mainWeaponIndex = 0;
         private int subWeaponIndex = 1;     
         private bool isSet1Active = true;   //現在セット１(0, 1)がアクティブか
-        
         
         [Header("Input Control(Lock Axes)")] 
         public AxisState horizontalAim;
@@ -76,11 +74,11 @@ namespace MyMaterials.Scripts.Entity.Player
         [SerializeField] private BitFormationManager bitManager;            // BitFormationManagerへの参照
         [SerializeField] private List<FormationMapping> formationMappings;  // 状態と設計図のマッピングリスト
 
+        public event Action<WeaponSystem, WeaponSystem> OnActiveWeaponChanged;  // アクティブな武器が変更されたときに通知するイベント
         
         /* ========内部状態変数======== */
         // 操作系入力値
         private Vector2 moveRawInput = Vector2.zero;
-
         private bool isThrustUp = false;
         private bool isThrustDown = false;
         private bool isFireSecondaryWeapon = false;
@@ -281,7 +279,7 @@ namespace MyMaterials.Scripts.Entity.Player
         /// <summary>
         /// 現在のメイン武器を取得
         /// </summary>
-        private WeaponSystem GetMainWeapon()
+        public WeaponSystem GetMainWeapon()
         {
             if (weaponSlots != null && weaponSlots.Count > mainWeaponIndex)
                 return weaponSlots[mainWeaponIndex];
@@ -292,9 +290,9 @@ namespace MyMaterials.Scripts.Entity.Player
         /// <summary>
         /// 現在のメイン武器を取得
         /// </summary>
-        private WeaponSystem GetSubWeapon()
+        public WeaponSystem GetSubWeapon()
         {
-            if (weaponSlots != null && weaponSlots.Count > mainWeaponIndex)
+            if (weaponSlots != null && weaponSlots.Count > subWeaponIndex)
                 return weaponSlots[subWeaponIndex];
             return null;
         }
@@ -332,7 +330,9 @@ namespace MyMaterials.Scripts.Entity.Player
             subWeaponIndex = subIndex;
             
             Debug.Log($"武器セットを切り替え: Main={GetMainWeapon()?.name}, Sub={GetSubWeapon()?.name}");
-            
+
+            OnActiveWeaponChanged?.Invoke(GetMainWeapon(), GetSubWeapon());
+
             // TODO: HUDManagerに現在のアクティブ武器を通知する
             // todo hudManager.UpdateActiveWeapons(GetMainWeapon(), GetSubWeapon());
         }
@@ -364,9 +364,6 @@ namespace MyMaterials.Scripts.Entity.Player
         /// </summary>
         private void ReloadActiveWeapon()
         {
-            // var activeWeapon = GetActiveWeapon();
-            // activeWeapon?.TryReload();
-            
             var mainWeapon = GetMainWeapon();
             if (mainWeapon != null)
             {
@@ -511,14 +508,6 @@ namespace MyMaterials.Scripts.Entity.Player
             Vector2 target2D = new Vector2(targetVel.x, targetVel.z);
             bool isAccelerating = target2D.sqrMagnitude > current2D.sqrMagnitude;
             float smoothTime = isAccelerating ? dashAccelTime : decelTime;
-            
-            //加減速に応じたsmoothTimeで加減速
-            // Vector3 smoothedVel = Vector3.SmoothDamp(
-            //     rb.velocity,
-            //     targetVel,
-            //     ref currentVelocity,
-            //     smoothTime
-            // );
 
             Vector3 smoothedVel = Vector3.MoveTowards(rb.velocity, targetVel, dashSpeed * Time.deltaTime / smoothTime);
             rb.velocity = smoothedVel;
@@ -544,6 +533,7 @@ namespace MyMaterials.Scripts.Entity.Player
             hudManager.SetBoostEnergyValue(currentDashEnergy);
         }
         
+        
         /// <summary>
         /// ダッシュエネルギーを時間経過で回復させる処理
         /// </summary>
@@ -563,6 +553,7 @@ namespace MyMaterials.Scripts.Entity.Player
             }
         }
         
+        
         /// <summary>
         /// 現在の入力からビットのフォーメーション状態を決定し、BitFormationManagerに伝える
         /// </summary>
@@ -579,6 +570,7 @@ namespace MyMaterials.Scripts.Entity.Player
                 }
             }
         }
+        
 
         /// <summary>
         /// 現在の入力値から、どの状態であるべきかを判断する
@@ -602,16 +594,6 @@ namespace MyMaterials.Scripts.Entity.Player
             }
         }
         
-        
-        /// <summary>
-        /// 攻撃処理をまとめた関数
-        /// </summary>
-        // private void FireWeapon()
-        // {
-        //     Transform target = lockOnManager.GetCurrentTarget();
-        //     weapon.OnTriggerDown(emitPoint);
-        //     weapon.SetLockOnTarget(target);
-        // }
         
         /// <summary>
         /// カーソルの更新処理

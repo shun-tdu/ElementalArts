@@ -1,4 +1,5 @@
 ﻿using System;
+using MyMaterials.Scripts.Singletons;
 using UnityEngine;
 using MyMaterials.Scripts.Weapon.Behavior.Projectile.Core;
 
@@ -20,6 +21,9 @@ namespace MyMaterials.Scripts.Weapon.Behavior.Projectile
         [SerializeField] private InterfaceReference<SpawnPattern.ISpawnPattern> spawnPattern;
         [SerializeField] private InterfaceReference<Movement.IProjectileMovement> movement;
         [SerializeField] private InterfaceReference<Impact.IProjectileImpact> impact;
+
+        [Header("サウンド (Sound)")] 
+        [SerializeField] private SoundType fireSound;
         
         // ---- 武器性能のプロパティ ----
         public int MagazineSize => magazineSize;
@@ -58,6 +62,8 @@ namespace MyMaterials.Scripts.Weapon.Behavior.Projectile
             // 弾を消費
             owner.ConsumeAmmo();
 
+            AudioManager.Instance.PlaySE(fireSound);
+            
             Action<GameObject> setupLogic = (projectileGO) =>
             {
                 if (projectileGO.TryGetComponent<Rigidbody>(out var rb))

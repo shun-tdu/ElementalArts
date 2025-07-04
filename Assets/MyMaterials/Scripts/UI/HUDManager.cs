@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using MyMaterials.Scripts.Entity.Enemy;
+using MyMaterials.Scripts.Weapon;
 
 
 namespace MyMaterials.Scripts.UI
@@ -33,13 +34,22 @@ namespace MyMaterials.Scripts.UI
         [SerializeField] private Color lockOnBoxRockOnColor;
         [SerializeField] private float reticleTransitionDuration = 0.2f;
         
+        [Header("Gauge Colors")]
+        [SerializeField] private Color normalGaugeColor = Color.white;
+        [SerializeField] private Color reloadingGaugeColor = Color.red;
+        
         // ---- 内部参照 ----
         private PlayerHealth playerHealth;
         private LockOnManager lockOnManager;
+        private PlayerController playerController;
         private Camera mainCamera;
         private Vector2 defaultPivotPosReticleImage;
         private Vector2 defaultPivotPosLockOnBoxUI;
-        // private float currentBoostEnergyValue;
+        private WeaponSystem activeMainWeapon;
+        private WeaponSystem activeSubWeapon;
+        
+        private float mainWeaponStartFill;  //リロード開始時のゲージ量を記憶するための変数
+        private float subWeaponStartFill;   //リロード開始時のゲージ量を記憶するための変数
         
         
         private void Start()
@@ -47,6 +57,7 @@ namespace MyMaterials.Scripts.UI
             mainCamera = Camera.main;
             playerHealth = FindObjectOfType<PlayerHealth>();
             lockOnManager = FindObjectOfType<LockOnManager>();
+            playerController = FindObjectOfType<PlayerController>();
             
             // ---- プレイヤーのHPイベント購読 ----
             if (playerHealth != null)
@@ -62,16 +73,20 @@ namespace MyMaterials.Scripts.UI
                 boosSlider.value = boostEnergyMax;
             }
             
-            // --- ロックオンUIの初期化とイベント購読 ---
+            // ---- ロックオンUIの初期化とイベント購読 ----
             if (lockOnManager != null)
             {
                 defaultPivotPosReticleImage = reticleImage.rectTransform.pivot;
                 defaultPivotPosLockOnBoxUI = lockOnBoxUI.rectTransform.pivot;
-                
                 lockOnManager.OnStateChanged += HandleLockOnStateChange;
-                
-                // 初期状態を反映
                 HandleLockOnStateChange(lockOnManager.CurrentState);
+            }
+            
+            // ---- プレイヤーの武器切り替えイベントの購読 ----
+            if (playerController != null)
+            {
+                playerController.OnActiveWeaponChanged += HandleActiveWeaponsChanged;
+                HandleActiveWeaponsChanged(playerController.GetMainWeapon(), playerController.GetSubWeapon());
             }
         }
 
@@ -80,6 +95,22 @@ namespace MyMaterials.Scripts.UI
             // イベント購読を解除 (メモリリーク防止)
             if (playerHealth != null) playerHealth.OnHealthChanged -= UpdateHealthUI;
             if (lockOnManager != null) lockOnManager.OnStateChanged -= HandleLockOnStateChange;
+            if(playerController != null) playerController.OnActiveWeaponChanged -= HandleActiveWeaponsChanged;
+            
+            // 監視中の武器のイベントも解除
+            if (activeMainWeapon != null)
+            {
+                activeMainWeapon.OnAmmoChanged -= UpdateMainWeaponAmmoUI;
+                activeMainWeapon.OnReloadStatusChanged -= HandleMainWeaponReloadStatus;
+                activeMainWeapon.OnReloadProgress -= UpdateMainWeaponReloadProgress;
+            }
+
+            if (activeSubWeapon != null)
+            {
+                activeSubWeapon.OnAmmoChanged -= UpdateSubWeaponAmmoUI;
+                activeSubWeapon.OnReloadStatusChanged -= HandleSubWeaponReloadStatus; // ★追加
+                activeSubWeapon.OnReloadProgress -= UpdateSubWeaponReloadProgress; // ★追加
+            }
         }
 
         
@@ -93,6 +124,15 @@ namespace MyMaterials.Scripts.UI
             }
         }
 
+        
+        public void SetBoostEnergyValue(float newValue)
+        {
+            if (boosSlider != null)
+            {
+                boosSlider.value = Mathf.Clamp(newValue, 0, boostEnergyMax);
+            }
+        }
+        
         
         /// <summary>
         /// LockOnManagerからの状態変化通知を受けてUIを更新する
@@ -250,11 +290,155 @@ namespace MyMaterials.Scripts.UI
             }
         }
 
-        public void SetBoostEnergyValue(float newValue)
+        /// <summary>
+        /// PlayerControllerからの武器切り替え通知を受けて、監視対象を更新する
+        /// </summary>
+        private void HandleActiveWeaponsChanged(WeaponSystem newMain, WeaponSystem newSub)
         {
-            if (boosSlider != null)
+            // 古い武器のイベント監視を解除
+            if (activeMainWeapon != null)
             {
-                boosSlider.value = Mathf.Clamp(newValue, 0, boostEnergyMax);
+                activeMainWeapon.OnAmmoChanged -= UpdateMainWeaponAmmoUI;
+                activeMainWeapon.OnReloadStatusChanged -= HandleMainWeaponReloadStatus;
+                activeMainWeapon.OnReloadProgress -= UpdateMainWeaponReloadProgress;
+                gaugeLeft.color = normalGaugeColor;
+            }
+            if (activeSubWeapon != null)
+            {
+                activeSubWeapon.OnAmmoChanged -= UpdateSubWeaponAmmoUI;
+                activeSubWeapon.OnReloadStatusChanged -= HandleSubWeaponReloadStatus;
+                activeSubWeapon.OnReloadProgress -= UpdateSubWeaponReloadProgress;
+                gaugeRight.color = normalGaugeColor;
+            }
+            
+            // 新しい武器への参照を保持
+            activeMainWeapon = newMain;
+            activeSubWeapon = newSub;
+            
+            // 新しい武器のイベント監視を開始
+            if (activeMainWeapon != null)
+            {
+                activeMainWeapon.OnAmmoChanged += UpdateMainWeaponAmmoUI;
+                activeMainWeapon.OnReloadStatusChanged += HandleMainWeaponReloadStatus;
+                activeMainWeapon.OnReloadProgress += UpdateMainWeaponReloadProgress;
+                
+                UpdateMainWeaponAmmoUI(activeMainWeapon.CurrentAmmo, activeMainWeapon.GetMaxAmmo());
+                
+                if (activeMainWeapon.IsReloading)
+                {
+                    HandleMainWeaponReloadStatus(true);
+                    UpdateMainWeaponReloadProgress(activeMainWeapon.CurrentReloadProgress);
+                }
+            }
+            else
+            {
+                SetGauge(0, gaugeLeft);
+            }
+            
+            if (activeSubWeapon != null)
+            {
+                activeSubWeapon.OnAmmoChanged += UpdateSubWeaponAmmoUI;
+                activeSubWeapon.OnReloadStatusChanged += HandleSubWeaponReloadStatus;
+                activeSubWeapon.OnReloadProgress += UpdateSubWeaponReloadProgress;
+                
+                UpdateSubWeaponAmmoUI(activeSubWeapon.CurrentAmmo, activeSubWeapon.GetMaxAmmo());
+
+                if (activeSubWeapon.IsReloading)
+                {
+                    HandleSubWeaponReloadStatus(true);
+                    UpdateSubWeaponReloadProgress(activeSubWeapon.CurrentReloadProgress);
+                }
+            }
+            else
+            {
+                SetGauge(0, gaugeRight);
+            }
+        }
+        
+        
+        /// <summary>
+        /// メイン武器のリロード状態を管理
+        /// </summary>
+        private void HandleMainWeaponReloadStatus(bool isReloading)
+        {
+            if (isReloading)
+            {
+                // リロード開始時のゲージ量を記憶し、色を変える
+                mainWeaponStartFill = activeMainWeapon.CurrentAmmo / activeMainWeapon.GetMaxAmmo();
+                gaugeLeft.color = reloadingGaugeColor;
+            }
+            else
+            {
+                // リロード完了時は色を戻す
+                gaugeLeft.color = normalGaugeColor;
+            }
+        }
+
+        
+        /// <summary>
+        /// サブ武器のリロード状態を管理
+        /// </summary>
+        private void HandleSubWeaponReloadStatus(bool isReloading)
+        {
+            if (isReloading)
+            {
+                subWeaponStartFill = activeSubWeapon.CurrentAmmo / activeSubWeapon.GetMaxAmmo();
+                gaugeRight.color = reloadingGaugeColor;
+            }
+            else
+            {
+                gaugeRight.color = normalGaugeColor;
+            }
+        }
+        
+        /// <summary>
+        /// メイン武器のリロード進捗を更新
+        /// </summary>
+        private void UpdateMainWeaponReloadProgress(float progress)
+        {
+            // 開始時のゲージ量から満タン(1.0)までを、進捗(progress)に応じて補間する
+            float targetFill = Mathf.Lerp(mainWeaponStartFill, 1.0f, progress);
+            SetGauge(targetFill, gaugeLeft);
+        }
+
+        
+        /// <summary>
+        ///　サブ武器のリロード進捗を更新
+        /// </summary>
+        private void UpdateSubWeaponReloadProgress(float progress)
+        {
+            float targetFill = Mathf.Lerp(subWeaponStartFill, 1.0f, progress);
+            SetGauge(targetFill, gaugeRight);
+        }
+        
+        
+        /// <summary>
+        /// メイン武器の弾薬変化を受けて、左ゲージを更新する
+        /// </summary>
+        private void UpdateMainWeaponAmmoUI(float currentAmmo, float maxAmmo)
+        {
+            if (maxAmmo > 0)
+            {
+                SetGauge(currentAmmo / maxAmmo, gaugeLeft);
+            }
+            else
+            {
+                SetGauge(0, gaugeLeft);
+            }
+        }
+        
+        /// <summary>
+        /// サブ武器の弾薬変化を受けて、右ゲージを更新する
+        /// </summary>
+        private void UpdateSubWeaponAmmoUI(float currentAmmo, float maxAmmo)
+        {
+            if (maxAmmo > 0)
+            {
+                SetGauge(currentAmmo / maxAmmo, gaugeRight);
+            }
+            else
+            {
+                SetGauge(0, gaugeRight);
             }
         }
     }
