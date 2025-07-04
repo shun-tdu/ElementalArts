@@ -40,7 +40,7 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Movement
         }
         
         /// <summary>
-        /// 索敵中の行動（ゆっくりと回転するなど）
+        /// 索敵中の行動
         /// </summary>
         public void Patrol()
         {

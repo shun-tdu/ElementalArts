@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7751a1a8fbb040c487bdab05a6d20bbd, type: 3}
+  m_Name: AIPersonality_StrafeMan
+  m_EditorClassIdentifier: 
+  visionRange: 300
+  longRangeAttackRange: 100
+  attackRange: 5
+  transitions:
+  - _condition:
+      _reference: {fileID: 11400000, guid: 1fc2be8cbb08bb34eab4011df63885ec, type: 2}
+    _targetState:
+      _reference: {fileID: 11400000, guid: 635d01ed3a1421a46bc03fee2f43d526, type: 2}
+  - _condition:
+      _reference: {fileID: 11400000, guid: daf4cd16fa1a1cb49a0ca5457c89f4bd, type: 2}
+    _targetState:
+      _reference: {fileID: 11400000, guid: 04d33b4f3214125409cf3a726cd89a6e, type: 2}
+  - _condition:
+      _reference: {fileID: 11400000, guid: daf4cd16fa1a1cb49a0ca5457c89f4bd, type: 2}
+    _targetState:
+      _reference: {fileID: 11400000, guid: 643b27dbe11a28743977a42b7e2610c0, type: 2}

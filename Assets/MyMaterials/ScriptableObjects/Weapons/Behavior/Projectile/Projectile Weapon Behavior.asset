@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe631015f7c54f5c80d750a1b8a91d82, type: 3}
   m_Name: Projectile Weapon Behavior
   m_EditorClassIdentifier: 
-  projectilePrefab: {fileID: 427604939944437126, guid: 47f1a870dcee473458c5bba731fa3848,
+  projectilePrefab: {fileID: 7351702935776426805, guid: 39ecd1c82a0213d45a29b21e8b9591ad,
     type: 3}
   shootInterval: 0.2
   lifeTime: 10

@@ -2039,6 +2039,9 @@ MonoBehaviour:
   apertureGaugeRight: {fileID: 0}
   aperturePartHorizon: {fileID: 0}
   aperturePartVertical: {fileID: 0}
+  gaugeTop: {fileID: 0}
+  gaugeLeft: {fileID: 0}
+  gaugeRight: {fileID: 0}
 --- !u!114 &994865014
 MonoBehaviour:
   m_ObjectHideFlags: 0

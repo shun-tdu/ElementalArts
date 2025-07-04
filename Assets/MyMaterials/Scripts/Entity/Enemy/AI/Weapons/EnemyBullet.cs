@@ -18,14 +18,16 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Weapons
             Destroy(gameObject, 5f);
         }
 
-        private void OnCollisionEnter(Collision other)
+        private void OnTriggerEnter(Collider other)
         {
+            // Debug.Log(other.gameObject.name);
             IDamageable damageableObject = other.gameObject.GetComponent<IDamageable>();
             if (damageableObject != null)
             {
-                Vector3 hitPosition = other.contacts[0].point;
+                Vector3 hitPosition = other.transform.position;
 
                 Vector3 hitDirection = rb.velocity.normalized;
+                
                 damageableObject.TakeDamage(damage, hitPosition, hitDirection);
             }
             Destroy(gameObject);
