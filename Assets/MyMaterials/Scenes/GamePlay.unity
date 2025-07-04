@@ -1765,7 +1765,7 @@ PrefabInstance:
     - target: {fileID: 7242688714163347590, guid: 824ae3b42ca998946afc8e2a89c5f7f2,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7242688715612143968, guid: 824ae3b42ca998946afc8e2a89c5f7f2,
         type: 3}
@@ -2675,24 +2675,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af5c72b87e674299acb9a96c858e6ac0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  reticleImage: {fileID: 164280277}
-  reticleNormalColor: {r: 1, g: 0.5019608, b: 0.8980392, a: 0.4}
-  reticleLockOnColor: {r: 0.5019608, g: 0.9490196, b: 1, a: 0.2}
-  lockOnRange: 100
+  lockOnBoxRect: {fileID: 2141319034}
+  <LockOnRange>k__BackingField: 300
   <LockOnLayer>k__BackingField:
     serializedVersion: 2
     m_Bits: 2048
-  lockOnBoxUI: {fileID: 2141319035}
-  reticleTransitionDuration: 0.02
-  lockOnBoxNormalColor: {r: 1, g: 1, b: 1, a: 0.2}
-  lockOnBoxRockOnColor: {r: 1, g: 0.23400003, b: 0.41760242, a: 0.2}
-  apertureGaugeLeft: {fileID: 1748700333}
-  apertureGaugeRight: {fileID: 1500748723}
-  aperturePartHorizon: {fileID: 134366280}
-  aperturePartVertical: {fileID: 1912889603}
-  gaugeTop: {fileID: 325482018}
-  gaugeLeft: {fileID: 208530826}
-  gaugeRight: {fileID: 405538002}
 --- !u!114 &906084955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2797,7 +2784,7 @@ PrefabInstance:
     - target: {fileID: 8103496143863324262, guid: ed7a78ccd194a2341ba9d2bcd25a1df0,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ed7a78ccd194a2341ba9d2bcd25a1df0, type: 3}
@@ -3505,6 +3492,20 @@ MonoBehaviour:
   boosSlider: {fileID: 121377401}
   healthSlider: {fileID: 8901217144080963309}
   boostEnergyMax: 100
+  reticleImage: {fileID: 164280277}
+  lockOnBoxUI: {fileID: 2141319035}
+  apertureGaugeLeft: {fileID: 1748700333}
+  apertureGaugeRight: {fileID: 1500748723}
+  aperturePartHorizon: {fileID: 134366280}
+  aperturePartVertical: {fileID: 1912889603}
+  gaugeTop: {fileID: 325482018}
+  gaugeLeft: {fileID: 208530826}
+  gaugeRight: {fileID: 405538002}
+  reticleNormalColor: {r: 1, g: 1, b: 1, a: 0.2}
+  reticleLockOnColor: {r: 1, g: 0, b: 0, a: 0.2}
+  lockOnBoxNormalColor: {r: 1, g: 1, b: 1, a: 0.2}
+  lockOnBoxRockOnColor: {r: 1, g: 0, b: 0, a: 0.2}
+  reticleTransitionDuration: 0.2
 --- !u!1 &1309822038
 GameObject:
   m_ObjectHideFlags: 0
@@ -3772,7 +3773,7 @@ PrefabInstance:
     - target: {fileID: 7242688714163347590, guid: 824ae3b42ca998946afc8e2a89c5f7f2,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7242688715612143968, guid: 824ae3b42ca998946afc8e2a89c5f7f2,
         type: 3}
@@ -4133,7 +4134,7 @@ PrefabInstance:
     - target: {fileID: 7242688714163347590, guid: 824ae3b42ca998946afc8e2a89c5f7f2,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7242688715612143968, guid: 824ae3b42ca998946afc8e2a89c5f7f2,
         type: 3}
@@ -4401,7 +4402,7 @@ PrefabInstance:
     - target: {fileID: 7242688714163347590, guid: 824ae3b42ca998946afc8e2a89c5f7f2,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7242688715612143968, guid: 824ae3b42ca998946afc8e2a89c5f7f2,
         type: 3}
@@ -5346,7 +5347,7 @@ PrefabInstance:
     - target: {fileID: 8103496143863324262, guid: ed7a78ccd194a2341ba9d2bcd25a1df0,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ed7a78ccd194a2341ba9d2bcd25a1df0, type: 3}
@@ -6398,7 +6399,7 @@ PrefabInstance:
     - target: {fileID: 8103496143863324262, guid: ed7a78ccd194a2341ba9d2bcd25a1df0,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ed7a78ccd194a2341ba9d2bcd25a1df0, type: 3}
