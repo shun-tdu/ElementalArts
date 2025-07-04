@@ -41,8 +41,8 @@ namespace MyMaterials.Scripts.Entity.Player
         [SerializeField] private float decelTime = 0.5f;
         
         [Header("Step Settings")] 
-        [SerializeField] private float stepForce = 15f;     //ダッシュのインパルス強度
-        [SerializeField] private float stepCoolDown = 1.0f; //ダッシュのクールダウン
+        [SerializeField] private float stepForce = 15f;     // ダッシュのインパルス強度
+        [SerializeField] private float stepCoolDown = 1.0f; // ダッシュのクールダウン
 
         [Header("Dash Settings")] 
         [SerializeField] private float dashSpeed = 80f;
@@ -58,18 +58,27 @@ namespace MyMaterials.Scripts.Entity.Player
         
         [Header("Look")] 
         [SerializeField] public float lookSensitivity = 2f;
+
+
+        [Header("武装 (Armaments)")] 
+        [Tooltip("装備する武器スロットのリスト。最大4つまでを想定")]
+        [SerializeField] private List<WeaponSystem> weaponSlots;    //複数の武器スロットを管理するリスト
+        private int mainWeaponIndex = 0;
+        private int subWeaponIndex = 1;     
+        private bool isSet1Active = true;   //現在セット１(0, 1)がアクティブか
+        
         
         [Header("Input Control(Lock Axes)")] 
         public AxisState horizontalAim;
         public AxisState verticalAim;
 
         [Header("ビット制御 (Bit Control)")]
-        [SerializeField] private BitFormationManager bitManager; // BitFormationManagerへの参照
-        [SerializeField] private List<FormationMapping> formationMappings; // 状態と設計図のマッピングリスト
+        [SerializeField] private BitFormationManager bitManager;            // BitFormationManagerへの参照
+        [SerializeField] private List<FormationMapping> formationMappings;  // 状態と設計図のマッピングリスト
 
         
-        /*========内部状態変数========*/
-        //操作系入力値
+        /* ========内部状態変数======== */
+        // 操作系入力値
         private Vector2 moveRawInput = Vector2.zero;
 
         private bool isThrustUp = false;
@@ -78,34 +87,31 @@ namespace MyMaterials.Scripts.Entity.Player
         private bool canStep = true;
         private Vector3 currentVelocity;
         
-        //ビット制御系
+        // ビット制御系
         private Dictionary<BitFormationState, BitFormationData> formationDictionary;
         private BitFormationState currentBitState;
 
-        //SE制御系
+        // SE制御系
         private bool isEngineSoundPlaying = false;
         
-        //アタッチされているコンポーネントの内部参照
+        // アタッチされているコンポーネントの内部参照
         private PlayerControls controls;
-        private WeaponSystem weapon;
         private CameraManager camManager;
         private LockOnManager lockOnManager;
         private HUDManager hudManager;
         private Rigidbody rb;
         private Transform emitPoint;
         
-        //ロックオン状態の外部参照
+        // ロックオン状態の外部参照
         public InputAction LockOnAction => controls.Player.LockOn;
         
 
         private void Awake()
         {
-            //コンポーネントの初期化
+            // コンポーネントの初期化
             rb = GetComponent<Rigidbody>();
-            // cameraPivot = transform.Find("CameraPivot");
             emitPoint = transform.Find("EmitPoint");
             controls = new PlayerControls();
-            weapon = GetComponent<WeaponSystem>();
             camManager = GetComponent<CameraManager>();
             lockOnManager = GetComponent<LockOnManager>();
             hudManager = GameObject.Find("Canvas/InGameHUD").GetComponent<HUDManager>();
@@ -116,37 +122,51 @@ namespace MyMaterials.Scripts.Entity.Player
                 formationDictionary[mapping.state] = mapping.formationData;
             }
             
-            //イベントの購読
-            //----Movement----
+            // イベントの購読
+            // ----Movement----
             controls.Player.Move.performed += ctx => moveRawInput = ctx.ReadValue<Vector2>();
             controls.Player.Move.canceled += ctx => moveRawInput = Vector2.zero;
 
-            //----Thrust----
+            // ----Thrust----
             controls.Player.ThrustUp.performed += ctx => isThrustUp = true;
             controls.Player.ThrustUp.canceled += ctx => isThrustUp = false;
             controls.Player.ThrustDown.performed += ctx => isThrustDown = true;
             controls.Player.ThrustDown.canceled += ctx => isThrustDown = false;
             
-            //----Step----
+            // ----Step----
             controls.Player.Step.performed += ctx => TryStep();
             
-            //----Dash----
+            // ----Dash----
             controls.Player.Dash.performed += _ => StartDashHold();
             controls.Player.Dash.canceled += _ => EndDashHold();
             
+            // ----Switch Weapon----
+            controls.Player.SwitchWeaponSet.performed += _ => SwitchActiveWeaponSet();
             
-            //----WeaponSystem----
-            controls.Player.Fire.started += _ => FireWeapon();
-            controls.Player.Fire.canceled += _ => weapon.OnTriggerUp(emitPoint);
+            // ----MainWeapon----
+            controls.Player.Fire.started += _ => FireWeapon(GetMainWeapon());
+            controls.Player.Fire.canceled += _ => GetMainWeapon()?.OnTriggerUp(emitPoint);
+            
+            // ---- SubWeapon----
+            controls.Player.SeondaryFire.started += _ => FireWeapon(GetSubWeapon());
+            controls.Player.SeondaryFire.canceled += _ => GetSubWeapon()?.OnTriggerUp(emitPoint);
+            
+            // ----Reload----
+            controls.Player.Reload.performed += _ => ReloadActiveWeapon();
+            
         }
 
         private void Start()
         {
-            //----カーソルの画面固定処理----
+            // カーソルの画面固定処理
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-
+            
+            // エナジーゲージの初期化
             currentDashEnergy = dashEnergyMax;
+            
+            // 最初の武器を有効化
+            SetActiveWeapons(0,1);
         }
 
         private void OnEnable() => controls.Player.Enable();
@@ -154,20 +174,20 @@ namespace MyMaterials.Scripts.Entity.Player
 
         private void Update()
         {
-            //カメラステートの更新処理
+            // カメラステートの更新処理
             camManager.UpdateCameraState(transform, rb.velocity);
             
-            //AxisStateの更新処理
+            // AxisStateの更新処理
             horizontalAim.Update(Time.deltaTime);
             verticalAim.Update(Time.deltaTime);
             
-            //ダッシュの入力処理
+            // ダッシュの入力処理
             if (isDashHeld)
             {
                 dashHoldTime += Time.deltaTime;
                 if (dashHoldTime >= dashHoldThreshold)
                 {
-                    //移動入力があるときだけダッシュを開始
+                    // 移動入力があるときだけダッシュを開始
                     if (moveRawInput.sqrMagnitude > 0.01f)
                     {
                         BeginDash();
@@ -175,20 +195,20 @@ namespace MyMaterials.Scripts.Entity.Player
                 }
             }
             
-            //移動用ビットの更新処理
+            // 移動用ビットの更新処理
             UpdateBitFormation();
             
-            //カーソル固定処理
+            // カーソル固定処理
             HandleCursorLock();
         }
 
         private void FixedUpdate()
         {
-            //した2つは同じUpdateで呼ばないとカクつく
-            //移動処理
+            // HandleMovement, HandleCharacterRotationは同じUpdateで呼ばないとカクつく
+            // 移動処理
             HandleMovement();
             
-            //ダッシュ処理
+            // ダッシュ処理
             if (isDashing && currentDashEnergy > 1f)
             {
                 // 移動入力がなければダッシュを中断する
@@ -207,16 +227,20 @@ namespace MyMaterials.Scripts.Entity.Player
                 RegenerateDashEnergy();
             }
             
-            //キャラクターの向きをカメラに合わせる処理
+            // キャラクターの向きをカメラに合わせる処理
             HandleCharacterRotation();
 
             if (controls.Player.Fire.IsPressed())
             {
-                weapon.OnTriggerHold(emitPoint);
-                weapon.SetLockOnTarget(lockOnManager.GetCurrentTarget());
+                HandleWeaponHold(GetMainWeapon());
+            }
+
+            if (controls.Player.SeondaryFire.IsPressed())
+            {
+                HandleWeaponHold(GetSubWeapon());
             }
             
-            //移動SE再生処理
+            // 移動SE再生処理
             if (moveRawInput.sqrMagnitude > 0.01f || isThrustUp || isThrustDown)
             {
                 if (!isEngineSoundPlaying)
@@ -239,12 +263,121 @@ namespace MyMaterials.Scripts.Entity.Player
         /// <summary>
         /// Playerのターゲットを指定するメソッド
         /// </summary>
-        /// <param name="target">ターゲットのTransform</param>
         public void SetTarget(Transform target)
         {
-            weapon.SetLockOnTarget(target);
+            var mainWeapon = GetMainWeapon();
+            if (mainWeapon != null)
+            {
+                mainWeapon.SetLockOnTarget(target);
+            }
+            var subWeapon = GetSubWeapon();
+            if (subWeapon != null)
+            {
+                subWeapon.SetLockOnTarget(target);
+            }
+        }
+
+        
+        /// <summary>
+        /// 現在のメイン武器を取得
+        /// </summary>
+        private WeaponSystem GetMainWeapon()
+        {
+            if (weaponSlots != null && weaponSlots.Count > mainWeaponIndex)
+                return weaponSlots[mainWeaponIndex];
+            return null;
         }
         
+        
+        /// <summary>
+        /// 現在のメイン武器を取得
+        /// </summary>
+        private WeaponSystem GetSubWeapon()
+        {
+            if (weaponSlots != null && weaponSlots.Count > mainWeaponIndex)
+                return weaponSlots[subWeaponIndex];
+            return null;
+        }
+        
+        
+        /// <summary>
+        /// アクティブな武器を切り替える
+        /// </summary>
+        private void SwitchActiveWeaponSet()
+        {
+            // 装備が2つ以下なら切り替えない
+            if(weaponSlots.Count <= 2) return;
+
+            isSet1Active = !isSet1Active;
+
+            if (isSet1Active)
+            {
+                SetActiveWeapons(0, 1);
+            }
+            else
+            {
+                // 4つない場合はサブはメインと同じにする
+                int nextSubIndex = weaponSlots.Count > 3 ? 3 : 2;
+                SetActiveWeapons(2, nextSubIndex);
+            }
+        }
+        
+        
+        /// <summary>
+        /// 現在アクティブな武器のWeaponSystemコンポーネントを取得する
+        /// </summary>
+        private void SetActiveWeapons(int mainIndex, int subIndex)
+        {
+            mainWeaponIndex = mainIndex;
+            subWeaponIndex = subIndex;
+            
+            Debug.Log($"武器セットを切り替え: Main={GetMainWeapon()?.name}, Sub={GetSubWeapon()?.name}");
+            
+            // TODO: HUDManagerに現在のアクティブ武器を通知する
+            // todo hudManager.UpdateActiveWeapons(GetMainWeapon(), GetSubWeapon());
+        }
+        
+        
+        /// <summary>
+        /// 指定された武器で攻撃を開始
+        /// </summary>
+        private void FireWeapon(WeaponSystem weapon)
+        {
+            if (weapon != null)
+            {
+                weapon.OnTriggerDown(emitPoint);
+                weapon.SetLockOnTarget(lockOnManager.GetCurrentTarget());
+            }
+        }
+
+        private void HandleWeaponHold(WeaponSystem weapon)
+        {
+            if (weapon != null)
+            {
+                weapon.OnTriggerHold(emitPoint);
+                weapon.SetLockOnTarget(lockOnManager.GetCurrentTarget());
+            }
+        }
+        
+        /// <summary>
+        /// 現在アクティブな武器をリロードを試みる
+        /// </summary>
+        private void ReloadActiveWeapon()
+        {
+            // var activeWeapon = GetActiveWeapon();
+            // activeWeapon?.TryReload();
+            
+            var mainWeapon = GetMainWeapon();
+            if (mainWeapon != null)
+            {
+                mainWeapon.TryReload();
+            }
+            var subWeapon = GetSubWeapon();
+            if (subWeapon != null)
+            {
+                subWeapon.TryReload();
+            }
+        }
         
         /// <summary>
         /// プレイヤーの回転処理
@@ -297,7 +430,6 @@ namespace MyMaterials.Scripts.Entity.Player
         /// </summary>
         private void TryStep()
         {
-            Debug.Log("TryStep");
             //ステップフラグが立っていて、入力があればダッシュをする
             if(!canStep|| moveRawInput.sqrMagnitude < 0.01f) return;
             DoStepAsync().Forget();
@@ -398,16 +530,17 @@ namespace MyMaterials.Scripts.Entity.Player
         /// </summary>
         private void ConsumeDashEnergy()
         {
-            //エネルギーをFixedUpdate時間で減らす
+            // エネルギーをFixedUpdate時間で減らす
             currentDashEnergy -= dashEnergyConsume * Time.deltaTime;
             
-            //エネルギーが0を下回らないようにする
+            // エネルギーが0を下回らないようにする
             if (currentDashEnergy <= 0)
             {
                 currentDashEnergy = 0;
                 StopDash();
             }
-            //todo エネルギーをUIに反映
+            
+            // エネルギーをUIに反映
             hudManager.SetBoostEnergyValue(currentDashEnergy);
         }
         
@@ -416,16 +549,16 @@ namespace MyMaterials.Scripts.Entity.Player
         /// </summary>
         private void RegenerateDashEnergy()
         {
-            //最大値以上なら何もしない
+            // 最大値以上なら何もしない
             if(currentDashEnergy <  dashEnergyMax)
             { 
-                //エネルギー回復処理
+                // エネルギー回復処理
                 currentDashEnergy += dashEnergyRegeneration * Time.deltaTime;
             
-                //最大値クリップ
+                // 最大値クリップ
                 currentDashEnergy = Mathf.Min(currentDashEnergy, dashEnergyMax);
 
-                //todo エネルギーをUIに反映
+                // エネルギーをUIに反映
                 hudManager.SetBoostEnergyValue(currentDashEnergy);
             }
         }
@@ -473,12 +606,12 @@ namespace MyMaterials.Scripts.Entity.Player
         /// <summary>
         /// 攻撃処理をまとめた関数
         /// </summary>
-        private void FireWeapon()
-        {
-            Transform target = lockOnManager.GetCurrentTarget();
-            weapon.OnTriggerDown(emitPoint);
-            weapon.SetLockOnTarget(target);
-        }
+        // private void FireWeapon()
+        // {
+        //     Transform target = lockOnManager.GetCurrentTarget();
+        //     weapon.OnTriggerDown(emitPoint);
+        //     weapon.SetLockOnTarget(target);
+        // }
         
         /// <summary>
         /// カーソルの更新処理

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f46cd6cabcc804a44aaa631652c8f73c, type: 3}
+  m_Name: Stylized Beam Behavior
+  m_EditorClassIdentifier: 
+  damagePerSecond: 50
+  shootRange: 50
+  ammoConsumptionPerSecond: 20
+  maxCharge: 100
+  beamVFXPrefab: {fileID: 3732969151504569116, guid: 420ece510cfa24246aebf2c747b59639,
+    type: 3}
+  muzzleFlashEffectType: 0
+  hitEffectType: 3

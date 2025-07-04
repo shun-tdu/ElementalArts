@@ -266,7 +266,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.012517095
+  m_Volume: 0.17079073
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -492,12 +492,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectPoolSize: 64
   effectInformations:
-  - type: 1
+  - type: 2
     prefab: {fileID: 1981572952473662724, guid: 203611db36a6d8b46ba6f0437188e75b,
       type: 3}
     duration: 1
-  - type: 2
+  - type: 4
     prefab: {fileID: 578350719197847823, guid: 7d616a330a119eb4fbda273c359f69b8, type: 3}
+    duration: 1
+  - type: 0
+    prefab: {fileID: 1981572952473662724, guid: 203611db36a6d8b46ba6f0437188e75b,
+      type: 3}
+    duration: 1
+  - type: 3
+    prefab: {fileID: 1981572952473662724, guid: 203611db36a6d8b46ba6f0437188e75b,
+      type: 3}
     duration: 1
 --- !u!1 &973455563
 GameObject:

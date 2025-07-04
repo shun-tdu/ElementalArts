@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
@@ -57,7 +58,7 @@ namespace MyMaterials.Scripts.Entity.Player
         [SerializeField] private Image gaugeLeft;
         [SerializeField] private Image gaugeRight;
 
-        //ロックオン関連フィールド
+        // ロックオン関連フィールド
         public Transform MainLockOnTarget { get; private set; }
         public float MainTargetDistance { get; private set; } 
         public bool IsLockedOn { get; private set; } = false;
@@ -78,13 +79,15 @@ namespace MyMaterials.Scripts.Entity.Player
             mainCamera = Camera.main;
             defaultPivotPosReticleImage = reticleImage.rectTransform.pivot;
             defaultPivotPosLockOnBoxUI = lockOnBoxUI.rectTransform.pivot;
+        }
 
+        private void Start()
+        {
             if (playerController.LockOnAction != null)
             {
                 switchTargetAction = playerController.LockOnAction.actionMap.asset.FindAction("SwitchTarget");
             }
         }
-
 
         private void OnEnable()
         {

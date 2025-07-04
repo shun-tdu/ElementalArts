@@ -12,9 +12,11 @@ namespace MyMaterials.Scripts.Singletons
     public enum EffectType
     {
         // Muzzle Flash
+        MuzzleFlash_StylizedBeam,
         Laser,
         // HitEffect
         HitEffect_1,
+        HitEffect_StylizedBeam,
         
         // Explosion
         Explosion_1,
