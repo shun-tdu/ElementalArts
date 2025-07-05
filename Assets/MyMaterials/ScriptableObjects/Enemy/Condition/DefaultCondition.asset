@@ -9,7 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3d8bfc9bcb93499c86f4716d8377c19e, type: 3}
-  m_Name: Single Hit Impact
+  m_Script: {fileID: 11500000, guid: ddb048e4e2ac4aee993067440c1613d4, type: 3}
+  m_Name: DefaultCondition
   m_EditorClassIdentifier: 
-  damage: 50

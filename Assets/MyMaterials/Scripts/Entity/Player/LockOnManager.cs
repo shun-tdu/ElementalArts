@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using Cysharp.Threading.Tasks;
 using MyMaterials.Scripts.Utility;
-using MyMaterials.Scripts.Singletons;
+using MyMaterials.Scripts.Managers.Singletons;
 
 namespace MyMaterials.Scripts.Entity.Player
 {

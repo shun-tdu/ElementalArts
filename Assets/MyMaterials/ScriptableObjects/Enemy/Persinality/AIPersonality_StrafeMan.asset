@@ -25,6 +25,6 @@ MonoBehaviour:
     _targetState:
       _reference: {fileID: 11400000, guid: 04d33b4f3214125409cf3a726cd89a6e, type: 2}
   - _condition:
-      _reference: {fileID: 11400000, guid: daf4cd16fa1a1cb49a0ca5457c89f4bd, type: 2}
+      _reference: {fileID: 11400000, guid: 325fe2a42bbd6f34288494394200563f, type: 2}
     _targetState:
-      _reference: {fileID: 11400000, guid: 643b27dbe11a28743977a42b7e2610c0, type: 2}
+      _reference: {fileID: 11400000, guid: 117f19d4decc612468b705bf65090f40, type: 2}

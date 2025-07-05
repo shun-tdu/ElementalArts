@@ -5,7 +5,7 @@ using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 
-namespace MyMaterials.Scripts.Singletons
+namespace MyMaterials.Scripts.Managers.Singletons
 {
     public enum SoundType
     {
@@ -26,6 +26,7 @@ namespace MyMaterials.Scripts.Singletons
         RechargeWeapon_1,
         //UI
         UIClick,
+        EnergyEmpty
     }
     public class AudioManager : MonoBehaviour
     {

@@ -112,7 +112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c30ba34e8ea54917b0cb9b368e6ecffc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  personality: {fileID: 0}
+  personality: {fileID: 11400000, guid: be775052707beb246a68469c9c951f68, type: 2}
 --- !u!114 &7242688715612143969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -125,7 +125,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a82566050d4455383703757a827556e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  viewAngle: 90
+  viewAngle: 360
   viewRadius: 200
   targetMask:
     serializedVersion: 2
@@ -159,7 +159,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b8af48f16c34663bdf0f5698476a364, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bulletPrefab: {fileID: 1805255529877311805, guid: 7921fdf2c9640144e989b83674ac4dcc,
+  bulletPrefab: {fileID: 5408747178049640956, guid: 13faf2cb51ccf8344af47bc6d91fd935,
     type: 3}
   firePoint: {fileID: 7242688714163347587}
   fireForce: 50

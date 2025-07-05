@@ -1,6 +1,6 @@
 ﻿using MyMaterials.Scripts.Entity.Enemy.AI.Movement;
 using MyMaterials.Scripts.Entity.Enemy.AI.Weapons;
-using MyMaterials.Scripts.Singletons;
+using MyMaterials.Scripts.Managers.Singletons;
 using UnityEngine;
 
 namespace MyMaterials.Scripts.Entity.Enemy.AI.Core.State
@@ -13,7 +13,7 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Core.State
         
         public void OnEnter(EnemyAIController enemy)
         {
-            Debug.Log("攻撃状態に移行");
+            // Debug.Log("攻撃状態に移行");
             
             // Stateに必要なコンポーネントを取得
             if (weapons == null)

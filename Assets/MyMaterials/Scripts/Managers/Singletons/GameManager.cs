@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR;
 
-namespace MyMaterials.Scripts.Singletons
+namespace MyMaterials.Scripts.Managers.Singletons
 {
     public enum GameState
     {

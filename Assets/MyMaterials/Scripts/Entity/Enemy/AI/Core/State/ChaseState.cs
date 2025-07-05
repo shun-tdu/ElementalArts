@@ -10,7 +10,7 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Core.State
         
         public void OnEnter(EnemyAIController enemy)
         {
-            Debug.Log("追跡状態に移行");
+            // Debug.Log("追跡状態に移行");
             
             //Stateに必要なコンポーネントを取得
             if (movement == null)
@@ -36,7 +36,7 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Core.State
 
         public void OnExit(EnemyAIController enemy)
         {
-            Debug.Log("追跡状態を終了");
+            // Debug.Log("追跡状態を終了");
         }
     }
 }

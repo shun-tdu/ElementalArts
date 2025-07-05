@@ -96,9 +96,9 @@ GameObject:
   - component: {fileID: 8103496143863324261}
   - component: {fileID: 8103496143863324257}
   - component: {fileID: 8103496143863324258}
+  - component: {fileID: 8103496143863324256}
   - component: {fileID: 8103496143863324259}
   - component: {fileID: 8103496143863324271}
-  - component: {fileID: 8103496143863324256}
   m_Layer: 11
   m_Name: EnemySucide
   m_TagString: Enemy
@@ -179,6 +179,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 10
   rotationSpeed: 5
+--- !u!114 &8103496143863324256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8103496143863324262}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a82566050d4455383703757a827556e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  viewAngle: 360
+  viewRadius: 100
+  targetMask:
+    serializedVersion: 2
+    m_Bits: 512
+  obstacleMask:
+    serializedVersion: 2
+    m_Bits: 1
 --- !u!114 &8103496143863324259
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -212,26 +232,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
---- !u!114 &8103496143863324256
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8103496143863324262}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a82566050d4455383703757a827556e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  viewAngle: 90
-  viewRadius: 100
-  targetMask:
-    serializedVersion: 2
-    m_Bits: 512
-  obstacleMask:
-    serializedVersion: 2
-    m_Bits: 1
 --- !u!1 &8103600517968412802
 GameObject:
   m_ObjectHideFlags: 0

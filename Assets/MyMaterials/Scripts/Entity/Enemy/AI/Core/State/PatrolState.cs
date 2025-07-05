@@ -10,7 +10,7 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Core.State
         
         public void OnEnter(EnemyAIController enemy)
         {
-            Debug.Log("索敵状態に移行");
+            // Debug.Log("索敵状態に移行");
 
             //Stateに必要なコンポーネントを取得
             if (movement == null)
@@ -32,7 +32,7 @@ namespace MyMaterials.Scripts.Entity.Enemy.AI.Core.State
         
         public void OnExit(EnemyAIController enemy)
         {
-            Debug.Log("索敵状態を終了");
+            // Debug.Log("索敵状態を終了");
         }
     }
 }

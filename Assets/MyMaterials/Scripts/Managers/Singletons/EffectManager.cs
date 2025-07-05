@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.VFX;
 using Cysharp.Threading.Tasks;
 
-namespace MyMaterials.Scripts.Singletons
+namespace MyMaterials.Scripts.Managers.Singletons
 {
     // エフェクトの種類
     public enum EffectType

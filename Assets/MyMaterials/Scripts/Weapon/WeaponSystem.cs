@@ -1,6 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-using MyMaterials.Scripts.Singletons;
+using MyMaterials.Scripts.Managers.Singletons;
 using MyMaterials.Scripts.Weapon.Behavior.Projectile;
 using UnityEngine;
 

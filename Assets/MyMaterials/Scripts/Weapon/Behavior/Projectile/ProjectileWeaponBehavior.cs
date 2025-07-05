@@ -1,5 +1,5 @@
 ﻿using System;
-using MyMaterials.Scripts.Singletons;
+using MyMaterials.Scripts.Managers.Singletons;
 using UnityEngine;
 using MyMaterials.Scripts.Weapon.Behavior.Projectile.Core;
 

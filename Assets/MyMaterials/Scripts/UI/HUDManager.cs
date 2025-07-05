@@ -14,7 +14,7 @@ namespace MyMaterials.Scripts.UI
         [Header("HP & Boost Sliders")]
         [SerializeField] private Slider boosSlider;
         [SerializeField] private Slider healthSlider;
-        [SerializeField] private float boostEnergyMax;
+        // [SerializeField] private float boostEnergyMax;
         
         [Header("Lock-On UI References")]
         [SerializeField] private Image reticleImage;
@@ -69,8 +69,8 @@ namespace MyMaterials.Scripts.UI
             // ---- ブーストゲージの初期化 ----
             if (boosSlider != null)
             {
-                boosSlider.maxValue = boostEnergyMax;
-                boosSlider.value = boostEnergyMax;
+                boosSlider.maxValue = playerController.EnergyMax;
+                boosSlider.value = playerController.EnergyMax;
             }
             
             // ---- ロックオンUIの初期化とイベント購読 ----
@@ -125,11 +125,11 @@ namespace MyMaterials.Scripts.UI
         }
 
         
-        public void SetBoostEnergyValue(float newValue)
+        public void SetEnergyValue(float newValue)
         {
             if (boosSlider != null)
             {
-                boosSlider.value = Mathf.Clamp(newValue, 0, boostEnergyMax);
+                boosSlider.value = Mathf.Clamp(newValue, 0, playerController.EnergyMax);
             }
         }
         

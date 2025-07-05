@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 using MyMaterials.Scripts.Weapon;
 using MyMaterials.Scripts.UI;
 using MyMaterials.Scripts.Entity.Player.Bit;
-using MyMaterials.Scripts.Singletons;
+using MyMaterials.Scripts.Managers.Singletons;
 
 namespace MyMaterials.Scripts.Entity.Player
 {
@@ -42,16 +42,17 @@ namespace MyMaterials.Scripts.Entity.Player
         
         [Header("Step Settings")] 
         [SerializeField] private float stepForce = 15f;     // ダッシュのインパルス強度
+        [SerializeField] private float stepEnergyCost = 25f;
         [SerializeField] private float stepCoolDown = 1.0f; // ダッシュのクールダウン
 
         [Header("Dash Settings")] 
         [SerializeField] private float dashSpeed = 80f;
-        [SerializeField] private float dashEnergyMax = 100f;
+        [field:SerializeField] public float EnergyMax { get; private set; } = 100f;
         [SerializeField] private float dashEnergyConsume = 10f;
-        [SerializeField] private float dashEnergyRegeneration = 20f;
+        [SerializeField] private float energyRegeneration = 20f;
         [SerializeField] private float dashHoldThreshold = 0.2f;
         [SerializeField] private float dashAccelTime = 1.0f;
-        private float currentDashEnergy;
+        private float currentEnergy;
         private float dashHoldTime = 0f;
         private bool isDashing = false;
         private bool isDashHeld = false;
@@ -161,7 +162,7 @@ namespace MyMaterials.Scripts.Entity.Player
             Cursor.visible = false;
             
             // エナジーゲージの初期化
-            currentDashEnergy = dashEnergyMax;
+            currentEnergy = EnergyMax;
             
             // 最初の武器を有効化
             SetActiveWeapons(0,1);
@@ -207,7 +208,7 @@ namespace MyMaterials.Scripts.Entity.Player
             HandleMovement();
             
             // ダッシュ処理
-            if (isDashing && currentDashEnergy > 1f)
+            if (isDashing && currentEnergy > 1f)
             {
                 // 移動入力がなければダッシュを中断する
                 if (moveRawInput.sqrMagnitude < 0.01f)
@@ -329,7 +330,7 @@ namespace MyMaterials.Scripts.Entity.Player
             mainWeaponIndex = mainIndex;
             subWeaponIndex = subIndex;
             
-            Debug.Log($"武器セットを切り替え: Main={GetMainWeapon()?.name}, Sub={GetSubWeapon()?.name}");
+            // Debug.Log($"武器セットを切り替え: Main={GetMainWeapon()?.name}, Sub={GetSubWeapon()?.name}");
 
             OnActiveWeaponChanged?.Invoke(GetMainWeapon(), GetSubWeapon());
 
@@ -427,8 +428,14 @@ namespace MyMaterials.Scripts.Entity.Player
         /// </summary>
         private void TryStep()
         {
-            //ステップフラグが立っていて、入力があればダッシュをする
+            // ステップフラグが立っていて、入力があればダッシュをする
             if(!canStep|| moveRawInput.sqrMagnitude < 0.01f) return;
+            
+            // エネルギーが足りているかチェック
+            if (currentEnergy < stepEnergyCost)
+            {
+                AudioManager.Instance.PlaySE(SoundType.EnergyEmpty);
+            }
             DoStepAsync().Forget();
         }
         
@@ -441,6 +448,9 @@ namespace MyMaterials.Scripts.Entity.Player
         private async UniTaskVoid DoStepAsync()
         {
             canStep = false;
+
+            currentEnergy -= stepEnergyCost;
+            hudManager.SetEnergyValue(currentEnergy);
             
             //入力方向の単位ベクトルを取得
             Vector3 dir = (transform.right * moveRawInput.x + transform.forward * moveRawInput.y).normalized;
@@ -484,7 +494,7 @@ namespace MyMaterials.Scripts.Entity.Player
         /// </summary>
         private void BeginDash()
         {
-            if (currentDashEnergy > 0f)
+            if (currentEnergy > 0f)
                 isDashing = true;
         }
         
@@ -520,17 +530,17 @@ namespace MyMaterials.Scripts.Entity.Player
         private void ConsumeDashEnergy()
         {
             // エネルギーをFixedUpdate時間で減らす
-            currentDashEnergy -= dashEnergyConsume * Time.deltaTime;
+            currentEnergy -= dashEnergyConsume * Time.deltaTime;
             
             // エネルギーが0を下回らないようにする
-            if (currentDashEnergy <= 0)
+            if (currentEnergy <= 0)
             {
-                currentDashEnergy = 0;
+                currentEnergy = 0;
                 StopDash();
             }
             
             // エネルギーをUIに反映
-            hudManager.SetBoostEnergyValue(currentDashEnergy);
+            hudManager.SetEnergyValue(currentEnergy);
         }
         
         
@@ -540,16 +550,16 @@ namespace MyMaterials.Scripts.Entity.Player
         private void RegenerateDashEnergy()
         {
             // 最大値以上なら何もしない
-            if(currentDashEnergy <  dashEnergyMax)
+            if(currentEnergy <  EnergyMax)
             { 
                 // エネルギー回復処理
-                currentDashEnergy += dashEnergyRegeneration * Time.deltaTime;
+                currentEnergy += energyRegeneration * Time.deltaTime;
             
                 // 最大値クリップ
-                currentDashEnergy = Mathf.Min(currentDashEnergy, dashEnergyMax);
+                currentEnergy = Mathf.Min(currentEnergy, EnergyMax);
 
                 // エネルギーをUIに反映
-                hudManager.SetBoostEnergyValue(currentDashEnergy);
+                hudManager.SetEnergyValue(currentEnergy);
             }
         }
         

@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.VFX;
-using MyMaterials.Scripts.Singletons;
+using MyMaterials.Scripts.Managers.Singletons;
 
 
 namespace MyMaterials.Scripts.Weapon.Behavior.Continuous

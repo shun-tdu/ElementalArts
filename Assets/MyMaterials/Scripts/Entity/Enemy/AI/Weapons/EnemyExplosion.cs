@@ -1,6 +1,6 @@
 ﻿using MyMaterials.Scripts.Entity.Enemy.AI.Core;
 using UnityEngine;
-using MyMaterials.Scripts.Singletons;
+using MyMaterials.Scripts.Managers.Singletons;
 
 namespace MyMaterials.Scripts.Entity.Enemy.AI.Weapons
 {

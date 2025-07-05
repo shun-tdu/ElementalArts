@@ -2,7 +2,7 @@
 using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using MyMaterials.Scripts.Singletons;
+using MyMaterials.Scripts.Managers.Singletons;
 
 namespace MyMaterials.Scripts.Entity.Enemy.AI.Weapons
 {
