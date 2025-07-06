@@ -10,6 +10,7 @@ namespace MyMaterials.Scripts.Managers.Singletons
     {
         Boot,       //起動時
         Title,      //タイトル画面
+        MainMenu,       //MainMenu画面
         Playing,    //プレイ中
         Paused,     //ポーズ中
         StageClear, //ステージクリア
@@ -45,7 +46,7 @@ namespace MyMaterials.Scripts.Managers.Singletons
         {
             if (SceneManager.GetActiveScene().name == "Boot")
             {
-                ChangeState(GameState.Playing);
+                ChangeState(GameState.MainMenu);
             }
         }
 
@@ -78,6 +79,10 @@ namespace MyMaterials.Scripts.Managers.Singletons
                 case GameState.Title:
                     Time.timeScale = 1f;
                     SceneManager.LoadScene("Title");
+                    break;
+                case GameState.MainMenu:
+                    Time.timeScale = 1f;
+                    SceneManager.LoadScene("MainMenu");
                     break;
                 case GameState.Playing:
                     Time.timeScale = 1f;

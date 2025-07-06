@@ -65,7 +65,7 @@ namespace MyMaterials.Scripts.Entity.Player
         [SerializeField] private List<WeaponSystem> weaponSlots;    //複数の武器スロットを管理するリスト
         private int mainWeaponIndex = 0;
         private int subWeaponIndex = 1;     
-        private bool isSet1Active = true;   //現在セット１(0, 1)がアクティブか
+        private bool isSet1Active = true;                                   //現在セット１(0, 1)がアクティブか
         
         [Header("Input Control(Lock Axes)")] 
         public AxisState horizontalAim;
