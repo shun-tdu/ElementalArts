@@ -20,11 +20,23 @@ namespace MyMaterials.Scripts.Entity.Player
 
         //コンポーネントの内部参照
         private LockOnManager lockOnManager;
+        private PlayerHealth playerHealth;
+        private CinemachineImpulseSource impulseSource;
         
         private void Awake()
         {
             EyeTransform = GameObject.Find("Eye").transform;
             lockOnManager = GetComponent<LockOnManager>();
+            playerHealth = GetComponent<PlayerHealth>();
+            impulseSource = GetComponent<CinemachineImpulseSource>();
+        }
+
+        private void OnEnable()
+        {
+            if (playerHealth != null)
+            {
+                playerHealth.OnDamaged += HandlePlayerDamaged;
+            }
         }
 
         /// <summary>
@@ -75,6 +87,20 @@ namespace MyMaterials.Scripts.Entity.Player
                     vCamFreeLookHighRight.Priority = 10;
                 }
             }
+        }
+
+        private void HandlePlayerDamaged(Vector3 hitDirection)
+        {
+            if (impulseSource != null)
+            {
+                Debug.Log("Camera Shake!!!");
+                impulseSource?.GenerateImpulse();    
+            }
+            else
+            {
+                Debug.LogError("Cant find impulse source");
+            }
+            
         }
     }
 }

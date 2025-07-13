@@ -13,7 +13,7 @@ namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Core
         [Tooltip("何秒後に追尾を開始するか")]
         [SerializeField] private float homingStartDelay = 0.5f;
 
-        private bool isHoingActive = false;
+        private bool isHomingActive = false;
 
         private void Start()
         {
@@ -33,12 +33,12 @@ namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Core
         private IEnumerator ActivateHomingCoroutine()
         {
             yield return new WaitForSeconds(homingStartDelay);
-            isHoingActive = true;
+            isHomingActive = true;
         }
         
         private void FixedUpdate()
         {
-            if (isHoingActive && target != null && Rb.velocity.sqrMagnitude > 0f)
+            if (isHomingActive && target != null && Rb.velocity.sqrMagnitude > 0f)
             {
                 //ターゲット方向
                 Vector3 desireDir = (target.position - transform.position).normalized;

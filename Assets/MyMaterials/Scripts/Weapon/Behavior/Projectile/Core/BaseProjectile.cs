@@ -82,8 +82,6 @@ namespace MyMaterials.Scripts.Weapon.Behavior.Projectile.Core
             //Projectileの衝突時の処理呼び出し
             _impact?.OnImpact(transform, other);
             Destroy(gameObject);
-
-            //todo 最強の解決策】ハイブリッド（併用）アプローチを実装する
         }
     }
 }

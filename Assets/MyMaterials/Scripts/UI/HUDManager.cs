@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using MyMaterials.Scripts.Entity.Enemy;
 using MyMaterials.Scripts.Weapon;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 
 namespace MyMaterials.Scripts.UI
@@ -14,7 +16,6 @@ namespace MyMaterials.Scripts.UI
         [Header("HP & Boost Sliders")]
         [SerializeField] private Slider boosSlider;
         [SerializeField] private Slider healthSlider;
-        // [SerializeField] private float boostEnergyMax;
         
         [Header("Lock-On UI References")]
         [SerializeField] private Image reticleImage;
@@ -37,12 +38,19 @@ namespace MyMaterials.Scripts.UI
         [Header("Gauge Colors")]
         [SerializeField] private Color normalGaugeColor = Color.white;
         [SerializeField] private Color reloadingGaugeColor = Color.red;
+
+        [Header("ダメージ演出")] 
+        [SerializeField] private Image damageIndicatorPrefab;           // ダメージ方向を示すUI用のプレハブ
+        [SerializeField] private float indicatorDisplayTime = 1.5f;     // ダメージインジケータ表示時間
+        [SerializeField] private Volume postProcessVolume;              // PostProcessing用のVolume
+        
         
         // ---- 内部参照 ----
         private PlayerHealth playerHealth;
         private LockOnManager lockOnManager;
         private PlayerController playerController;
         private Camera mainCamera;
+        private Vignette vignette;  
         private Vector2 defaultPivotPosReticleImage;
         private Vector2 defaultPivotPosLockOnBoxUI;
         private WeaponSystem activeMainWeapon;
@@ -62,8 +70,9 @@ namespace MyMaterials.Scripts.UI
             // ---- プレイヤーのHPイベント購読 ----
             if (playerHealth != null)
             {
-                playerHealth.OnHealthChanged += UpdateHealthUI;
-                UpdateHealthUI(playerHealth.CurrentHealth, playerHealth.MaxHealth);
+                playerHealth.OnHealthChanged += HandleHealthChanged;
+                playerHealth.OnDamaged += ShowDamageIndicator;
+                HandleHealthChanged(playerHealth.CurrentHealth, playerHealth.MaxHealth);
             }
 
             // ---- ブーストゲージの初期化 ----
@@ -88,12 +97,23 @@ namespace MyMaterials.Scripts.UI
                 playerController.OnActiveWeaponChanged += HandleActiveWeaponsChanged;
                 HandleActiveWeaponsChanged(playerController.GetMainWeapon(), playerController.GetSubWeapon());
             }
+            
+            // ---- PostProcessing Volumeかヴィネットを取得 ----
+            if (postProcessVolume != null)
+            {
+                postProcessVolume.profile.TryGet(out vignette);
+            }
         }
 
         private void OnDestroy()
         {
             // イベント購読を解除 (メモリリーク防止)
-            if (playerHealth != null) playerHealth.OnHealthChanged -= UpdateHealthUI;
+            if (playerHealth != null)
+            {
+                playerHealth.OnHealthChanged -= HandleHealthChanged;
+                playerHealth.OnDamaged -= ShowDamageIndicator;
+            }
+            
             if (lockOnManager != null) lockOnManager.OnStateChanged -= HandleLockOnStateChange;
             if(playerController != null) playerController.OnActiveWeaponChanged -= HandleActiveWeaponsChanged;
             
@@ -124,7 +144,10 @@ namespace MyMaterials.Scripts.UI
             }
         }
 
-        
+        /// <summary>
+        /// エネルギースライダーの値を設定する
+        /// </summary>
+        /// <param name="newValue"></param>
         public void SetEnergyValue(float newValue)
         {
             if (boosSlider != null)
@@ -281,12 +304,21 @@ namespace MyMaterials.Scripts.UI
             gaugeImage.fillAmount = amount;
         }
         
-        private void UpdateHealthUI(float currentHealth, float maxHealth)
+        private void HandleHealthChanged(float currentHealth, float maxHealth)
         {
+            // HPバーの更新処理
             if (healthSlider != null)
             {
                 healthSlider.maxValue = maxHealth;
                 healthSlider.value = currentHealth;
+            }
+            
+            // ヴィネットの更新処理
+            if (vignette != null)
+            {
+                // HPが減るほどビネットを強くする
+                float intensity = 1.0f - (currentHealth / maxHealth);
+                vignette.intensity.value = Mathf.Clamp(intensity * 0.6f, 0, 0.6f);
             }
         }
 
@@ -440,6 +472,35 @@ namespace MyMaterials.Scripts.UI
             {
                 SetGauge(0, gaugeRight);
             }
+        }
+
+        
+        /// <summary>
+        /// ダメージを受けた方向にインジケーターを表示する
+        /// </summary>
+        /// <param name="hitDirection"></param>
+        private async void ShowDamageIndicator(Vector3 hitDirection)
+        {
+            // インジケーターを生成
+            Image indicator = Instantiate(damageIndicatorPrefab, transform);
+            
+            // ---- 方向の計算 ----
+            // カメラの前方ベクトルと攻撃が来た方向の角度を計算
+            Vector3 cameraForward = mainCamera.transform.forward;
+            cameraForward.y = 0;
+            hitDirection.y = 0;
+            float angle = Vector3.SignedAngle(cameraForward, -hitDirection, Vector3.up);
+            
+            // インジケーターを正しい角度に回転させる
+            indicator.rectTransform.rotation = Quaternion.Euler(0, 0, angle);
+            
+            // ---- フェードアウト処理 ----
+            indicator.CrossFadeAlpha(1, 0.1f, true);
+            await UniTask.Delay(TimeSpan.FromSeconds(indicatorDisplayTime * 0.7f));
+            indicator.CrossFadeAlpha(0, indicatorDisplayTime * 0.3f, true);
+
+            Destroy(indicator.gameObject, indicatorDisplayTime * 0.3f);
+
         }
     }
 }
